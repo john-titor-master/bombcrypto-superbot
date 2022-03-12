@@ -59,6 +59,16 @@ export function makeGoSleepRequest(
     return makeGameMessage(wallet, "GO_SLEEP", messageId, data);
 }
 
+export function makeGoHomeRequest(
+    wallet: string,
+    messageId: number,
+    heroId: number
+) {
+    const data = new SFSObject();
+    data.putLong("id", heroId);
+    return makeGameMessage(wallet, "GO_HOME", messageId, data);
+}
+
 export function makeGoWorkRequest(
     wallet: string,
     messageId: number,

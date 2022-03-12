@@ -1,12 +1,14 @@
 import { Telegraf, Context } from "telegraf";
 
 import { Client } from "./api";
-import { sleep } from "./lib";
+import { askAndParseEnv, parseBoolean, sleep } from "./lib";
 import { logger } from "./logger";
 import {
     buildBlock,
     buildHero,
+    buildHouse,
     Hero,
+    House,
     IGetBlockMapPayload,
     IHeroUpdateParams,
     IMapTile,
@@ -19,6 +21,7 @@ import {
     parseGetBlockMapPayload,
     parseStartExplodePayload,
     parseSyncBombermanPayload,
+    parseSyncHousePayload,
 } from "./parsers";
 
 const DEFAULT_TIMEOUT = 120000;
@@ -44,6 +47,7 @@ export class TreasureMapBot {
     private squad!: Squad;
     private telegraf?: Telegraf;
     private selection: Hero[];
+    private houses: House[];
     private explosionByHero: ExplosionByHero;
     private history: IMapTile[];
     private index: number;
@@ -54,6 +58,7 @@ export class TreasureMapBot {
         this.client = new Client(walletId, DEFAULT_TIMEOUT);
         this.map = new TreasureMap({ blocks: [] });
         this.squad = new Squad({ heroes: [] });
+        this.houses = [];
 
         this.explosionByHero = new Map();
         this.selection = [];
@@ -101,8 +106,8 @@ export class TreasureMapBot {
         if (command === "exit") {
             await context.reply("Exiting in 5 seconds...");
             this.shouldRun = false;
-            await sleep(5000);
             await this.telegraf?.stop();
+            await sleep(10000);
             process.exit(0);
         } else if (command === "rewards") {
             if (this.client.isConnected) {
@@ -135,6 +140,14 @@ export class TreasureMapBot {
         );
     }
 
+    get home(): House | undefined {
+        return this.houses.filter((house) => house.active)[0];
+    }
+
+    get homeSlots() {
+        return this.home?.slots || 0;
+    }
+
     nextId() {
         return this.index++;
     }
@@ -151,6 +164,30 @@ export class TreasureMapBot {
         logger.info("Logged in successfully");
     }
 
+    async refreshHeroAtHome() {
+        const homeSelection = this.squad.notWorking
+            .sort((a, b) => a.energy - b.energy)
+            .slice(0, this.homeSlots);
+
+        logger.info(`Will send heroes home (${this.homeSlots} slots)`);
+
+        const atHome = this.squad.byState("Home");
+
+        for (const hero of atHome) {
+            if (homeSelection.some((hs) => hs.id === hero.id)) continue;
+
+            logger.info(`Removing hero ${hero.id} from home`);
+            await this.client.goSleep(hero.id);
+        }
+
+        for (const hero of homeSelection) {
+            if (hero.state === "Home") continue;
+
+            logger.info(`Sending hero ${hero.id} home`);
+            await this.client.goHome(hero.id);
+        }
+    }
+
     async refreshHeroSelection() {
         logger.info("Refreshing heroes");
         await this.client.syncBomberman();
@@ -158,7 +195,7 @@ export class TreasureMapBot {
         this.selection = this.squad.byState("Work");
 
         if (this.selection.length < MAX_WORKING_HEROES) {
-            for (const hero of this.squad.byState("Sleep")) {
+            for (const hero of this.squad.notWorking) {
                 if (hero.energy < MIN_HERO_ENERGY) continue;
 
                 logger.info(`Sending hero ${hero.id} to work`);
@@ -170,6 +207,8 @@ export class TreasureMapBot {
         }
 
         logger.info(`Sent ${this.selection.length} heroes to work`);
+
+        await this.refreshHeroAtHome();
     }
 
     async refreshMap() {
@@ -286,9 +325,15 @@ export class TreasureMapBot {
         }
     }
 
+    async loadHouses() {
+        const payloads = await this.client.syncHouse();
+        this.houses = payloads.map(parseSyncHousePayload).map(buildHouse);
+    }
+
     async loop() {
         this.shouldRun = true;
         await this.logIn();
+        await this.loadHouses();
         await this.refreshMap();
         await this.refreshHeroSelection();
 
@@ -297,7 +342,10 @@ export class TreasureMapBot {
             if (this.workingSelection.length === 0)
                 await this.refreshHeroSelection();
 
-            if (Date.now() > this.lastAdventure + 10 * 60 * 1000) {
+            if (
+                askAndParseEnv("ADVENTURE", parseBoolean, false) &&
+                Date.now() > this.lastAdventure + 10 * 60 * 1000
+            ) {
                 this.lastAdventure = Date.now();
 
                 await this.adventure();
@@ -346,6 +394,11 @@ export class TreasureMapBot {
         });
 
         this.client.on({
+            event: "goHome",
+            handler: this.handleHeroHome.bind(this),
+        });
+
+        this.client.on({
             event: "goWork",
             handler: this.handleHeroWork.bind(this),
         });
@@ -371,6 +424,11 @@ export class TreasureMapBot {
     private handleHeroSleep(params: IHeroUpdateParams) {
         this.squad.updateHeroEnergy(params);
         this.squad.updateHeroState(params.id, "Sleep");
+    }
+
+    private handleHeroHome(params: IHeroUpdateParams) {
+        this.squad.updateHeroEnergy(params);
+        this.squad.updateHeroState(params.id, "Home");
     }
 
     private handleHeroWork(params: IHeroUpdateParams) {

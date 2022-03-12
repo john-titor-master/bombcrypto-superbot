@@ -11,7 +11,7 @@ import { makeException } from "../err";
 import { askAndParseEnv, parseBoolean } from "../lib";
 import { logger } from "../logger";
 import { IGetBlockMapPayload, IHeroUpdateParams } from "../model";
-import { IStoryDetailsPayload } from "../parsers";
+import { IStoryDetailsPayload, ISyncHousePayload } from "../parsers";
 import { IStartExplodeInput, IStartExplodePayload } from "../parsers/explosion";
 import {
     IGetActiveBomberPayload,
@@ -37,6 +37,7 @@ import {
     makeGetRewardRequest,
     makeGetStoryLevelDetail,
     makeGetStoryMap,
+    makeGoHomeRequest,
     makeGoSleepRequest,
     makeGoWorkRequest,
     makeLoginRequest,
@@ -44,6 +45,7 @@ import {
     makeStartPVERequest,
     makeStopPVERequest,
     makeSyncBombermanRequest,
+    makeSyncHouseRequest,
 } from "./requests";
 
 type IExtensionResponseParams = {
@@ -68,12 +70,14 @@ type EventHandlerMap = {
     logout: () => void;
     getHeroUpgradePower: () => void;
     getBlockMap: (blocks: IGetBlockMapPayload[]) => void;
+    syncHouse: (houses: ISyncHousePayload[]) => void;
     getActiveBomber: (heroes: IGetActiveBomberPayload[]) => void;
     syncBomberman: (heroes: ISyncBombermanPayload[]) => void;
     startPVE: () => void;
     stopPVE: () => void;
     startExplode: (payload: IStartExplodePayload) => void;
     goSleep: (payload: IHeroUpdateParams) => void;
+    goHome: (payload: IHeroUpdateParams) => void;
     goWork: (payload: IHeroUpdateParams) => void;
     getReward: (payload: IGetRewardPayload[]) => void;
     getStoryDetails: (payload: IStoryDetailsPayload) => void;
@@ -100,12 +104,14 @@ type IClientController = {
     getHeroUpgradePower: IUniqueRequestController<void>;
     logout: IUniqueRequestController<void>;
     getBlockMap: IUniqueRequestController<IGetBlockMapPayload[]>;
+    syncHouse: IUniqueRequestController<ISyncHousePayload[]>;
     getActiveHeroes: IUniqueRequestController<IGetActiveBomberPayload[]>;
     syncBomberman: IUniqueRequestController<ISyncBombermanPayload[]>;
     startPVE: IUniqueRequestController<void>;
     stopPVE: IUniqueRequestController<void>;
     startExplode: ISerializedRequestController<IStartExplodePayload>;
     goSleep: ISerializedRequestController<IHeroUpdateParams>;
+    goHome: ISerializedRequestController<IHeroUpdateParams>;
     getReward: IUniqueRequestController<IGetRewardPayload[]>;
     goWork: ISerializedRequestController<IHeroUpdateParams>;
     getStoryMap: IUniqueRequestController<void>;
@@ -233,6 +239,22 @@ export class Client {
         );
     }
 
+    syncHouse(timeout = 0) {
+        this.ensureLoggedIn();
+
+        return makeUniquePromise(
+            this.controller.syncHouse,
+            () => {
+                const request = makeSyncHouseRequest(
+                    this.walletId,
+                    this.nextId()
+                );
+                this.sfs.send(request);
+            },
+            timeout || this.timeout
+        );
+    }
+
     getActiveHeroes(timeout = 0) {
         this.ensureLoggedIn();
 
@@ -321,6 +343,23 @@ export class Client {
             this.controller.goSleep,
             () => {
                 const request = makeGoSleepRequest(
+                    this.walletId,
+                    this.nextId(),
+                    heroId
+                );
+                this.sfs.send(request);
+            },
+            timeout || this.timeout
+        );
+    }
+
+    goHome(heroId: number, timeout = 0) {
+        this.ensureLoggedIn();
+
+        return makeSerializedPromise(
+            this.controller.goHome,
+            () => {
+                const request = makeGoHomeRequest(
                     this.walletId,
                     this.nextId(),
                     heroId
@@ -426,12 +465,14 @@ export class Client {
             logout: [],
             getHeroUpgradePower: [],
             getBlockMap: [],
+            syncHouse: [],
             getActiveBomber: [],
             syncBomberman: [],
             startPVE: [],
             stopPVE: [],
             startExplode: [],
             goSleep: [],
+            goHome: [],
             goWork: [],
             getReward: [],
             getStoryDetails: [],
@@ -459,6 +500,9 @@ export class Client {
             getBlockMap: {
                 current: undefined,
             },
+            syncHouse: {
+                current: undefined,
+            },
             getActiveHeroes: {
                 current: undefined,
             },
@@ -480,6 +524,10 @@ export class Client {
                 executors: [],
             },
             goSleep: {
+                current: undefined,
+                executors: [],
+            },
+            goHome: {
                 current: undefined,
                 executors: [],
             },
@@ -659,6 +707,16 @@ export class Client {
         this.callHandler(this.handlers.goSleep, result);
     }
 
+    private handleGoHome(params: SFSObject) {
+        const id = params.getLong("id");
+        const energy = params.getInt("energy");
+
+        const result = { id, energy };
+
+        resolveSerializedPromise(this.controller.goHome, result);
+        this.callHandler(this.handlers.goHome, result);
+    }
+
     private handleGoWork(params: SFSObject) {
         const id = params.getLong("id");
         const energy = params.getInt("energy");
@@ -734,6 +792,23 @@ export class Client {
         this.callHandler(this.handlers.getStoryMap);
     }
 
+    private handleSyncHouse(params: SFSObject) {
+        const data = params.getSFSArray("houses");
+
+        const houses = Array(data.size())
+            .fill(null)
+            .map((_, i) => {
+                const payload = data.getSFSObject(i);
+                return {
+                    house_gen_id: payload.getUtfString("house_gen_id"),
+                    active: payload.getInt("active"),
+                };
+            });
+
+        resolveUniquePromise(this.controller.syncHouse, houses);
+        this.callHandler(this.handlers.syncHouse, houses);
+    }
+
     private handleEnterDoor() {
         resolveUniquePromise(this.controller.enterDoor, undefined);
         this.callHandler(this.handlers.enterDoor);
@@ -750,6 +825,9 @@ export class Client {
         switch (command) {
             case "GET_BLOCK_MAP":
                 return rejectUniquePromise(this.controller.getBlockMap, error);
+
+            case "SYNC_HOUSE":
+                return rejectUniquePromise(this.controller.syncHouse, error);
 
             case "GET_ACTIVE_BOMBER":
                 return rejectUniquePromise(
@@ -777,6 +855,9 @@ export class Client {
 
             case "GO_SLEEP":
                 return rejectSerializedPromise(this.controller.goSleep, error);
+
+            case "GO_HOME":
+                return rejectSerializedPromise(this.controller.goHome, error);
 
             case "GO_WORK":
                 return rejectSerializedPromise(this.controller.goWork, error);
@@ -838,22 +919,22 @@ export class Client {
             this.sfs.logger.addEventListener(
                 LoggerEvent.INFO,
                 logger.info,
-                this
+                logger
             );
             this.sfs.logger.addEventListener(
                 LoggerEvent.ERROR,
                 logger.error,
-                this
+                logger
             );
             this.sfs.logger.addEventListener(
                 LoggerEvent.WARNING,
                 logger.warning,
-                this
+                logger
             );
             this.sfs.logger.addEventListener(
                 LoggerEvent.DEBUG,
                 logger.debug,
-                this
+                logger
             );
         }
     }
@@ -867,6 +948,9 @@ export class Client {
         switch (response.cmd) {
             case "GET_BLOCK_MAP":
                 return this.handleGetBlockMap(response.params);
+
+            case "SYNC_HOUSE":
+                return this.handleSyncHouse(response.params);
 
             case "GET_ACTIVE_BOMBER":
                 return this.handleGetActiveHeroes(response.params);
@@ -888,6 +972,9 @@ export class Client {
 
             case "GO_WORK":
                 return this.handleGoWork(response.params);
+
+            case "GO_HOME":
+                return this.handleGoHome(response.params);
 
             case "USER_LOGIN":
                 return this.handleUserLogin();

@@ -20,6 +20,7 @@ export type EGameAction =
     | "GET_ACTIVE_BOMBER"
     | "START_EXPLODE"
     | "GO_SLEEP"
+    | "GO_HOME"
     | "GO_WORK"
     | "GET_REWARD"
     | "GET_STORY_LEVEL_DETAIL"

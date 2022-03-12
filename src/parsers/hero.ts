@@ -1,3 +1,4 @@
+import { parseRevBin, toRevBin } from ".";
 import { makeException } from "../err";
 import {
     EHeroRarity,
@@ -36,14 +37,6 @@ function parseHeroSkill(skill: number): EHeroSkill {
     }
 
     return isSkillNumber(skill) ? HERO_SKILL_MAP[skill] : "Unknown";
-}
-
-function toRevBin(decStr: string) {
-    return BigInt(decStr).toString(2).split("").reverse().join("");
-}
-
-function parseRevBin(binStr: string, from: number, to: number) {
-    return parseInt(binStr.slice(from, to).split("").reverse().join(""), 2);
 }
 
 function parseHeroStats(genId: string): IHeroStats {

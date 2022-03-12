@@ -1,4 +1,4 @@
-export const STATE_ARRAY = ["Work", "Sleep"] as const;
+export const STATE_ARRAY = ["Work", "Sleep", "Home"] as const;
 
 export type EHeroState = typeof STATE_ARRAY[number] | "Unknown";
 

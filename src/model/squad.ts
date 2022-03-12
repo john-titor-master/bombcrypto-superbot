@@ -33,6 +33,10 @@ export class Squad {
         )[0];
     }
 
+    get notWorking() {
+        return this.activeHeroes.filter((hero) => hero.state !== "Work");
+    }
+
     update(params: ISquadParams) {
         this.params = params;
         this.heroById = new Map(this.heroes.map((hero) => [hero.id, hero]));
