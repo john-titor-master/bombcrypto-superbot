@@ -313,7 +313,7 @@ export class TreasureMapBot {
         for (let i = 0; i < amount; i++) {
             const details = await this.client.getStoryDetails();
             const hero = this.squad.rarest;
-            const level = Math.min(details.max_level + 1, 35);
+            const level = Math.min(details.max_level + 1, 45);
 
             logger.info(`Will play level ${level} with hero ${hero.id}`);
 
