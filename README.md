@@ -4,6 +4,13 @@
 
 This bot is a product of reverse engineering Bombcrypto game. It simulates the game and send messages using `websocket`. Since it does not require a browser to work, the main usage is for **multi-account**. Have fun!
 
+## Features
+
+It does the following:
+- Automatic farming on Treasure Hunt
+- Automatic Adventure mode (see usage section)
+- Handles Home feature if a house is available
+
 ## Installation
 
 You need the following packages installed for this bot to work:
