@@ -165,6 +165,8 @@ export class TreasureMapBot {
     }
 
     async refreshHeroAtHome() {
+        await this.client.syncBomberman();
+
         const homeSelection = this.squad.notWorking
             .sort((a, b) => a.energy - b.energy)
             .slice(0, this.homeSlots);
@@ -194,7 +196,9 @@ export class TreasureMapBot {
 
         this.selection = this.squad.byState("Work");
 
-        if (this.selection.length < MAX_WORKING_HEROES) {
+        if (
+            this.selection.length < Math.max(MAX_WORKING_HEROES, this.homeSlots)
+        ) {
             for (const hero of this.squad.notWorking) {
                 if (hero.energy < MIN_HERO_ENERGY) continue;
 
@@ -270,6 +274,7 @@ export class TreasureMapBot {
         if (energy <= 0) {
             logger.info(`Sending hero ${hero.id} to sleep`);
             await this.client.goSleep(hero.id);
+            await this.refreshHeroAtHome();
         }
 
         this.explosionByHero.set(hero.id, {
