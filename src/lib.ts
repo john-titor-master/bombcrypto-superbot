@@ -18,7 +18,7 @@ export function parseNumber(value: string) {
 }
 
 export function parseBoolean(value: string) {
-    return Boolean(value);
+    return Boolean(Number(value));
 }
 
 export function requireEnv(key: string) {

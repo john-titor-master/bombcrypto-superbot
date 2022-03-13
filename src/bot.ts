@@ -301,6 +301,9 @@ export class TreasureMapBot {
     }
 
     async adventure() {
+        const shouldRun = askAndParseEnv("ADVENTURE", parseBoolean, false);
+        if (!shouldRun) return;
+
         const rewards = await this.client.getReward();
         const keys = rewards.filter((reward) => reward.type === "Key")[0];
 
@@ -345,10 +348,7 @@ export class TreasureMapBot {
             if (this.workingSelection.length === 0)
                 await this.refreshHeroSelection();
 
-            if (
-                askAndParseEnv("ADVENTURE", parseBoolean, false) &&
-                Date.now() > this.lastAdventure + 10 * 60 * 1000
-            ) {
+            if (Date.now() > this.lastAdventure + 10 * 60 * 1000) {
                 this.lastAdventure = Date.now();
 
                 await this.adventure();
