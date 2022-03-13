@@ -165,8 +165,6 @@ export class TreasureMapBot {
     }
 
     async refreshHeroAtHome() {
-        await this.client.syncBomberman();
-
         const homeSelection = this.squad.notWorking
             .sort((a, b) => a.energy - b.energy)
             .slice(0, this.homeSlots);
