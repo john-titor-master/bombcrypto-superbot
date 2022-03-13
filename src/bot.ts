@@ -302,7 +302,7 @@ export class TreasureMapBot {
 
     async adventure() {
         const shouldRun = askAndParseEnv("ADVENTURE", parseBoolean, false);
-        if (!shouldRun) return console.log("Will not play adventure.");
+        if (!shouldRun) return logger.info("Will not play adventure.");
 
         const rewards = await this.client.getReward();
         const keys = rewards.filter((reward) => reward.type === "Key")[0];
