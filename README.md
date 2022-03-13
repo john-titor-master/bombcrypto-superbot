@@ -116,3 +116,8 @@ docker rm bsb1 -f
 ```
 
 You may create as many `.env` files as you need. For each account you run using Docker, give a different name when running the `docker run` command. For each bot, you need a **different** telegram key to communicate with them. All commands listed here a simple Docker commands, I highly recommend studying them at the official documentation and learn how it works.
+
+## Donations
+
+There is no need to donate to this project. I work on it just for fun. Its a hobby. But if
+you truly insist: BEP20 `0x2E11Fd7125876B3B34C54D13Bb815FFC719c438c`.
