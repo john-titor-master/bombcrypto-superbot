@@ -53,8 +53,12 @@ export class TreasureMapBot {
     private index: number;
     private shouldRun: boolean;
     private lastAdventure: number;
+    private walletId: string;
+    private telegramKey?: string;
 
     constructor(walletId: string, telegramKey?: string) {
+        this.walletId = walletId
+        this.telegramKey = telegramKey
         this.client = new Client(walletId, DEFAULT_TIMEOUT);
         this.map = new TreasureMap({ blocks: [] });
         this.squad = new Squad({ heroes: [] });
@@ -90,6 +94,34 @@ export class TreasureMapBot {
         );
 
         this.telegraf.launch();
+    }
+
+    async getRewards() {
+        if (this.client.isConnected) {
+            const results: { [key: string]: number } = {}
+            const rewards = await this.client.getReward();
+
+            rewards.map((reward) => results[`${reward.type}`] = reward.value)
+
+            return results
+        }
+
+        return null
+    }
+
+    async getStats() {
+        return {
+            workingHeroes: this.workingSelection.length,
+            map: this.map.toString(),
+            idx: this.index
+        }
+    }
+
+    async getConfig() {
+        return {
+            walletId: this.walletId,
+            telegramKey: this.telegramKey
+        }
     }
 
     private async handleTelegraf(command: ETelegrafCommand, context: Context) {
@@ -232,12 +264,12 @@ export class TreasureMapBot {
             locations.length <= HISTORY_SIZE
                 ? locations[0]
                 : locations.filter(
-                      ({ tile: option }) =>
-                          !this.history.find(
-                              (tile) =>
-                                  tile.i === option.i && tile.j === option.j
-                          )
-                  )[0];
+                    ({ tile: option }) =>
+                        !this.history.find(
+                            (tile) =>
+                                tile.i === option.i && tile.j === option.j
+                        )
+                )[0];
 
         return selected;
     }
@@ -258,7 +290,7 @@ export class TreasureMapBot {
     async placeBomb(hero: Hero, location: IMapTile) {
         logger.info(
             `Hero ${hero.id} ${hero.energy}/${hero.maxEnergy} will place ` +
-                `bomb on (${location.i}, ${location.j})`
+            `bomb on (${location.i}, ${location.j})`
         );
 
         const { energy } = await this.client.startExplode({
