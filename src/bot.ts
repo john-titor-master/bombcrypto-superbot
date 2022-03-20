@@ -99,10 +99,11 @@ export class TreasureMapBot {
         if (this.client.isConnected) {
             const results: { [key: string]: number } = {}
             const rewards = await this.client.getReward();
+            const detail = await this.client.coinDetail();
 
             rewards.map((reward) => results[`${reward.type}`] = reward.value)
 
-            return results
+            return { ...results, detail }
         }
 
         return null
