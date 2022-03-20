@@ -45,6 +45,10 @@ export function makeGetRewardRequest(wallet: string, messageId: number) {
     return makeGameMessage(wallet, "GET_REWARD", messageId);
 }
 
+export function makeCoinDetailRequest(wallet: string, messageId: number) {
+    return makeGameMessage(wallet, "COIN_DETAIL", messageId);
+}
+
 export function makeGetActiveBomberRequest(wallet: string, messageId: number) {
     return makeGameMessage(wallet, "GET_ACTIVE_BOMBER", messageId);
 }

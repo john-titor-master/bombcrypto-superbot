@@ -16,17 +16,16 @@ import {
     TreasureMap,
 } from "./model";
 import {
+    IGetActiveBomberPayload,
     IStartExplodePayload,
-    ISyncBombermanPayload,
+    parseGetActiveBomberPayload,
     parseGetBlockMapPayload,
     parseStartExplodePayload,
-    parseSyncBombermanPayload,
     parseSyncHousePayload,
 } from "./parsers";
 
 const DEFAULT_TIMEOUT = 120000;
 const MIN_HERO_ENERGY = 20;
-const MAX_WORKING_HEROES = 5;
 const HISTORY_SIZE = 5;
 
 type ExplosionByHero = Map<
@@ -112,8 +111,12 @@ export class TreasureMapBot {
         } else if (command === "rewards") {
             if (this.client.isConnected) {
                 const rewards = await this.client.getReward();
+                const detail = await this.client.coinDetail();
+
                 const message =
                     "Rewards:\n" +
+                    `Mined: ${detail.mined} | Invested: ${detail.invested} ` +
+                    `| Rewards: ${detail.rewards}\n` +
                     rewards
                         .map((reward) => `${reward.type}: ${reward.value}`)
                         .join("\n");
@@ -190,22 +193,16 @@ export class TreasureMapBot {
 
     async refreshHeroSelection() {
         logger.info("Refreshing heroes");
-        await this.client.syncBomberman();
+        await this.client.getActiveHeroes();
 
         this.selection = this.squad.byState("Work");
 
-        if (
-            this.selection.length < Math.max(MAX_WORKING_HEROES, this.homeSlots)
-        ) {
-            for (const hero of this.squad.notWorking) {
-                if (hero.energy < MIN_HERO_ENERGY) continue;
+        for (const hero of this.squad.notWorking) {
+            if (hero.energy < MIN_HERO_ENERGY) continue;
 
-                logger.info(`Sending hero ${hero.id} to work`);
-                await this.client.goWork(hero.id);
-                this.selection.push(hero);
-
-                if (this.selection.length >= MAX_WORKING_HEROES) break;
-            }
+            logger.info(`Sending hero ${hero.id} to work`);
+            await this.client.goWork(hero.id);
+            this.selection.push(hero);
         }
 
         logger.info(`Sent ${this.selection.length} heroes to work`);
@@ -273,6 +270,7 @@ export class TreasureMapBot {
             logger.info(`Sending hero ${hero.id} to sleep`);
             await this.client.goSleep(hero.id);
             await this.refreshHeroAtHome();
+            await this.refreshHeroSelection();
         }
 
         this.explosionByHero.set(hero.id, {
@@ -296,7 +294,7 @@ export class TreasureMapBot {
             }
 
             logger.info(this.map.toString());
-            await sleep(1000);
+            await sleep(250);
         }
     }
 
@@ -345,8 +343,7 @@ export class TreasureMapBot {
 
         do {
             if (this.map.totalLife <= 0) await this.refreshMap();
-            if (this.workingSelection.length === 0)
-                await this.refreshHeroSelection();
+            await this.refreshHeroSelection();
 
             if (Date.now() > this.lastAdventure + 10 * 60 * 1000) {
                 this.lastAdventure = Date.now();
@@ -387,7 +384,7 @@ export class TreasureMapBot {
         });
 
         this.client.on({
-            event: "syncBomberman",
+            event: "getActiveBomber",
             handler: this.handleSquadLoad.bind(this),
         });
 
@@ -419,8 +416,8 @@ export class TreasureMapBot {
         this.map.update({ blocks });
     }
 
-    private handleSquadLoad(payload: ISyncBombermanPayload[]) {
-        const heroes = payload.map(parseSyncBombermanPayload).map(buildHero);
+    private handleSquadLoad(payload: IGetActiveBomberPayload[]) {
+        const heroes = payload.map(parseGetActiveBomberPayload).map(buildHero);
         this.squad.update({ heroes });
     }
 
