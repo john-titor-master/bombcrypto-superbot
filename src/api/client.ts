@@ -17,7 +17,11 @@ import {
     IGetActiveBomberPayload,
     ISyncBombermanPayload,
 } from "../parsers/hero";
-import { IGetRewardPayload, parseRewardType } from "../parsers/reward";
+import {
+    IGetRewardPayload,
+    parseRewardType,
+    ICoinDetailPayload,
+} from "../parsers/reward";
 import { EGameAction } from "./base";
 import {
     ISerializedRequestController,
@@ -30,6 +34,7 @@ import {
     resolveUniquePromise,
 } from "./promise";
 import {
+    makeCoinDetailRequest,
     makeEnterDoorRequest,
     makeGetActiveBomberRequest,
     makeGetBlockMapRequest,
@@ -80,6 +85,7 @@ type EventHandlerMap = {
     goHome: (payload: IHeroUpdateParams) => void;
     goWork: (payload: IHeroUpdateParams) => void;
     getReward: (payload: IGetRewardPayload[]) => void;
+    coinDetail: (payload: ICoinDetailPayload) => void;
     getStoryDetails: (payload: IStoryDetailsPayload) => void;
     getStoryMap: () => void;
     enterDoor: () => void;
@@ -113,6 +119,7 @@ type IClientController = {
     goSleep: ISerializedRequestController<IHeroUpdateParams>;
     goHome: ISerializedRequestController<IHeroUpdateParams>;
     getReward: IUniqueRequestController<IGetRewardPayload[]>;
+    coinDetail: IUniqueRequestController<ICoinDetailPayload>;
     goWork: ISerializedRequestController<IHeroUpdateParams>;
     getStoryMap: IUniqueRequestController<void>;
     getStoryDetails: IUniqueRequestController<IStoryDetailsPayload>;
@@ -259,7 +266,7 @@ export class Client {
         this.ensureLoggedIn();
 
         return makeUniquePromise(
-            this.controller.getBlockMap,
+            this.controller.getActiveHeroes,
             () => {
                 const request = makeGetActiveBomberRequest(
                     this.walletId,
@@ -403,6 +410,22 @@ export class Client {
         );
     }
 
+    coinDetail(timeout = 0) {
+        this.ensureLoggedIn();
+
+        return makeUniquePromise(
+            this.controller.coinDetail,
+            () => {
+                const request = makeCoinDetailRequest(
+                    this.walletId,
+                    this.nextId()
+                );
+                this.sfs.send(request);
+            },
+            timeout || this.timeout
+        );
+    }
+
     getStoryDetails(timeout = 0) {
         this.ensureLoggedIn();
 
@@ -475,6 +498,7 @@ export class Client {
             goHome: [],
             goWork: [],
             getReward: [],
+            coinDetail: [],
             getStoryDetails: [],
             getStoryMap: [],
             enterDoor: [],
@@ -532,6 +556,9 @@ export class Client {
                 executors: [],
             },
             getReward: {
+                current: undefined,
+            },
+            coinDetail: {
                 current: undefined,
             },
             getStoryDetails: {
@@ -746,6 +773,17 @@ export class Client {
         this.callHandler(this.handlers.getReward, rewards);
     }
 
+    private handleCoinDetail(params: SFSObject) {
+        const detail = {
+            mined: params.getFloat("mined"),
+            invested: params.getFloat("invested"),
+            rewards: params.getFloat("rewards"),
+        };
+
+        resolveUniquePromise(this.controller.coinDetail, detail);
+        this.callHandler(this.handlers.coinDetail, detail);
+    }
+
     private handleGetStoryDetails(params: SFSObject) {
         const rawRewards = params.getSFSArray("level_rewards");
 
@@ -865,6 +903,9 @@ export class Client {
             case "GET_REWARD":
                 return rejectUniquePromise(this.controller.getReward, error);
 
+            case "COIN_DETAIL":
+                return rejectUniquePromise(this.controller.coinDetail, error);
+
             case "GET_HERO_UPGRADE_POWER":
                 return rejectUniquePromise(
                     this.controller.getHeroUpgradePower,
@@ -981,6 +1022,9 @@ export class Client {
 
             case "GET_REWARD":
                 return this.handleGetReward(response.params);
+
+            case "COIN_DETAIL":
+                return this.handleCoinDetail(response.params);
 
             case "GET_HERO_UPGRADE_POWER":
                 return this.handleGetHeroUpgradePower();

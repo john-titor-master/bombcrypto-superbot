@@ -21,3 +21,9 @@ export type IGetRewardPayload = {
     type: ERewardType;
     value: number;
 };
+
+export type ICoinDetailPayload = {
+    mined: number;
+    invested: number;
+    rewards: number;
+};

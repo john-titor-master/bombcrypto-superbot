@@ -23,6 +23,7 @@ export type EGameAction =
     | "GO_HOME"
     | "GO_WORK"
     | "GET_REWARD"
+    | "COIN_DETAIL"
     | "GET_STORY_LEVEL_DETAIL"
     | "GET_STORY_MAP"
     | "START_STORY_EXPLODE"
