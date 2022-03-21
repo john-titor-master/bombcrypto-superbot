@@ -101,9 +101,12 @@ export class TreasureMapBot {
             const rewards = await this.client.getReward();
             const detail = await this.client.coinDetail();
 
+            const bombers = await this.client.syncBomberman()
+
             rewards.map((reward) => results[`${reward.type}`] = reward.value)
 
-            return { ...results, detail }
+
+            return { ...results, detail, bombers, active: { heroCount: this.squad.heroes.length, heros: this.squad.heroes } }
         }
 
         return null

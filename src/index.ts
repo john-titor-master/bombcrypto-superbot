@@ -36,7 +36,7 @@ async function main() {
     })
 
     app.listen(port, () => {
-        console.log(`app listening on port ${port}`)
+        console.info(`app listening on port ${port}`)
     })
 
     await bot.loop();
