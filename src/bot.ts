@@ -153,7 +153,6 @@ export class TreasureMapBot {
         );
     }
     get notWorkingSelection() {
-        console.log(this.squad.notWorking);
         return this.squad.notWorking;
     }
 
