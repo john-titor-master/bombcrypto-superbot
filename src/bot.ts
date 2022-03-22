@@ -1,5 +1,4 @@
-import { Telegraf, Context } from "telegraf";
-
+import { Context, Telegraf } from "telegraf";
 import { Client } from "./api";
 import { askAndParseEnv, parseBoolean, sleep } from "./lib";
 import { logger } from "./logger";
@@ -25,7 +24,7 @@ import {
 } from "./parsers";
 
 const DEFAULT_TIMEOUT = 120000;
-const MIN_HERO_ENERGY = 20;
+const MIN_HERO_ENERGY = 90;
 const HISTORY_SIZE = 5;
 
 type ExplosionByHero = Map<
@@ -126,10 +125,21 @@ export class TreasureMapBot {
                 await context.reply("Not connected, please wait");
             }
         } else if (command === "stats") {
+            const workingHeroesLife = this.workingSelection.map((hero) => {
+                return `Hero ${hero.id}: ${hero.energy}/${hero.maxEnergy}`;
+            });
+            const notWorkingHeroesLife = this.notWorkingSelection.map(
+                (hero) => {
+                    return `Hero ${hero.id}: ${hero.energy}/${hero.maxEnergy}`;
+                }
+            );
+
             const message =
-                `Working heroes: ${this.workingSelection.length}\n` +
+                `Working heroes amount: ${this.workingSelection.length}\n` +
                 `Map: ${this.map.toString()}\n` +
-                `IDX: ${this.index}`;
+                `IDX: ${this.index}\n\n` +
+                `Working heroes: \n${workingHeroesLife.join("\n")}\n\n` +
+                `Resting heroes: \n${notWorkingHeroesLife.join("\n")}`;
 
             await context.reply(message);
         } else {
@@ -141,6 +151,9 @@ export class TreasureMapBot {
         return this.selection.filter(
             (hero) => hero.state === "Work" && hero.energy > 0
         );
+    }
+    get notWorkingSelection() {
+        return this.squad.notWorking;
     }
 
     get home(): House | undefined {
@@ -198,7 +211,8 @@ export class TreasureMapBot {
         this.selection = this.squad.byState("Work");
 
         for (const hero of this.squad.notWorking) {
-            if (hero.energy < MIN_HERO_ENERGY) continue;
+            const percent = (hero.energy / hero.maxEnergy) * 100;
+            if (percent < MIN_HERO_ENERGY) continue;
 
             logger.info(`Sending hero ${hero.id} to work`);
             await this.client.goWork(hero.id);
