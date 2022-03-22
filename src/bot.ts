@@ -126,20 +126,20 @@ export class TreasureMapBot {
             }
         } else if (command === "stats") {
             const workingHeroesLife = this.workingSelection.map((hero) => {
-                return `hero: ${hero.id}: ${hero.energy}/${hero.maxEnergy}`;
+                return `Hero ${hero.id}: ${hero.energy}/${hero.maxEnergy}`;
             });
             const notWorkingHeroesLife = this.notWorkingSelection.map(
                 (hero) => {
-                    return `hero :${hero.id}: ${hero.energy}/${hero.maxEnergy}`;
+                    return `Hero ${hero.id}: ${hero.energy}/${hero.maxEnergy}`;
                 }
             );
 
             const message =
-                `Working heroes: ${this.workingSelection.length}\n` +
+                `Working heroes amount: ${this.workingSelection.length}\n` +
                 `Map: ${this.map.toString()}\n` +
                 `IDX: ${this.index}\n\n` +
-                `Working heroes life: \n${workingHeroesLife.join("\n")}\n\n` +
-                `Not working heroes life: \n${notWorkingHeroesLife.join("\n")}`;
+                `Working heroes: \n${workingHeroesLife.join("\n")}\n\n` +
+                `Resting heroes: \n${notWorkingHeroesLife.join("\n")}`;
 
             await context.reply(message);
         } else {
