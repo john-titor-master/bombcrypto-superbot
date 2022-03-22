@@ -24,7 +24,7 @@ import {
 } from "./parsers";
 
 const DEFAULT_TIMEOUT = 120000;
-const MIN_HERO_ENERGY = 20;
+const MIN_HERO_ENERGY = 90;
 const HISTORY_SIZE = 5;
 
 type ExplosionByHero = Map<
