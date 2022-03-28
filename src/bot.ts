@@ -125,21 +125,22 @@ export class TreasureMapBot {
                 await context.reply("Not connected, please wait");
             }
         } else if (command === "stats") {
-            const workingHeroesLife = this.workingSelection.map((hero) => {
-                return `Hero ${hero.id}: ${hero.energy}/${hero.maxEnergy}`;
-            });
-            const notWorkingHeroesLife = this.notWorkingSelection.map(
-                (hero) => {
-                    return `Hero ${hero.id}: ${hero.energy}/${hero.maxEnergy}`;
-                }
-            );
+            const formatMsg = (hero: Hero) =>
+                `${hero.rarity} [${hero.id}]: ${hero.energy}/${hero.maxEnergy}`;
+
+            const workingHeroesLife = this.workingSelection
+                .map(formatMsg)
+                .join("\n");
+            const notWorkingHeroesLife = this.notWorkingSelection
+                .map(formatMsg)
+                .join("\n");
 
             const message =
                 `Working heroes amount: ${this.workingSelection.length}\n` +
                 `Map: ${this.map.toString()}\n` +
                 `IDX: ${this.index}\n\n` +
-                `Working heroes: \n${workingHeroesLife.join("\n")}\n\n` +
-                `Resting heroes: \n${notWorkingHeroesLife.join("\n")}`;
+                `Working heroes (${this.workingSelection.length}): \n${workingHeroesLife}\n\n` +
+                `Resting heroes (${this.notWorkingSelection.length}): \n${notWorkingHeroesLife}`;
 
             await context.reply(message);
         } else {
