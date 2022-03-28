@@ -136,7 +136,6 @@ export class TreasureMapBot {
                 .join("\n");
 
             const message =
-                `Working heroes amount: ${this.workingSelection.length}\n` +
                 `Map: ${this.map.toString()}\n` +
                 `IDX: ${this.index}\n\n` +
                 `Working heroes (${this.workingSelection.length}): \n${workingHeroesLife}\n\n` +
