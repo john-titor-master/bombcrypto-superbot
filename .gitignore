@@ -3,3 +3,4 @@ build/
 teste.txt
 .vscode/
 .env*
+.history
