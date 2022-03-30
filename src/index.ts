@@ -1,7 +1,8 @@
 import { TreasureMapBot } from "./bot";
 import { askAndParseEnv, identity, requireEnv } from "./lib";
 
-async function main() {
+// call an async function immediately
+(async() => {
     const bot = new TreasureMapBot(
         requireEnv("WALLET_ID"),
         askAndParseEnv("TELEGRAM_KEY", identity, "")
@@ -17,6 +18,4 @@ async function main() {
     });
 
     await bot.loop();
-}
-
-main();
+})();

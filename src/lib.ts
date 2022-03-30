@@ -25,7 +25,7 @@ export function requireEnv(key: string) {
     const value = process.env[key];
 
     if (value == null) {
-        const message = `Enviroment variable '${key}' is missing.`;
+        const message = `Environment variable '${key}' is missing.`;
         throw makeException("MissingEnv", message);
     }
 
