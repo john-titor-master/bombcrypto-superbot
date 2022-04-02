@@ -303,11 +303,8 @@ export class TreasureMapBot {
 
             if (this.canPlaceBomb(hero, location.tile)) {
                 await this.placeBomb(hero, location.tile);
-            } else {
-                logger.info(`Hero ${hero.id} cannot place bomb now.`);
-            }
-
-            logger.info(this.map.toString());
+                logger.info(this.map.toString());
+            } 
             await sleep(250);
         }
     }
