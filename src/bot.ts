@@ -268,7 +268,7 @@ export class TreasureMapBot {
 
     async placeBomb(hero: Hero, location: IMapTile) {
         logger.info(
-            `Hero ${hero.id} ${hero.energy}/${hero.maxEnergy} will place ` +
+            `${hero.rarity} ${hero.id} ${hero.energy}/${hero.maxEnergy} will place ` +
                 `bomb on (${location.i}, ${location.j})`
         );
 
