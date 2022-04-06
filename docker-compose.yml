@@ -3,6 +3,7 @@ version: "3.4"
 services:
   bomb1:
     build: .
+    restart: always
     working_dir: "/bombcrypto-superbot"
     environment:
       WALLET_ID: "MUDAR"
@@ -10,6 +11,7 @@ services:
       ADVENTURE: 1
   bomb2:
     build: .
+    restart: always
     working_dir: "/bombcrypto-superbot"
     environment:
       WALLET_ID: "MUDAR"
