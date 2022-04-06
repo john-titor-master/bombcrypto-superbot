@@ -1,0 +1,20 @@
+version: "3.4"
+
+services:
+  bomb1:
+    build: .
+    working_dir: "/bombcrypto-superbot"
+    environment:
+      WALLET_ID: "MUDAR"
+      TELEGRAM_KEY: "MUDAR"
+      ADVENTURE: 1
+  bomb2:
+    build: .
+    working_dir: "/bombcrypto-superbot"
+    environment:
+      WALLET_ID: "MUDAR"
+      TELEGRAM_KEY: "MUDAR"
+      ADVENTURE: 1
+
+
+

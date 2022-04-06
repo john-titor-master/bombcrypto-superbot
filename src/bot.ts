@@ -304,7 +304,7 @@ export class TreasureMapBot {
             if (this.canPlaceBomb(hero, location.tile)) {
                 await this.placeBomb(hero, location.tile);
                 logger.info(this.map.toString());
-            } 
+            }
             await sleep(250);
         }
     }

@@ -13,7 +13,7 @@
     "typescript": "^4.5.4"
   },
   "scripts": {
-    "go": "yarn lint && yarn format:check && yarn build && yarn start",
+    "go": "yarn lint && yarn format && yarn build && yarn start",
     "start": "node -r ./build/websocket.js --unhandled-rejections=strict build/index.js",
     "build": "tsc",
     "format:check": "yarn prettier --check src/",
