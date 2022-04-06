@@ -1,3 +1,4 @@
+
 > :warning: **There are risks when using any kind of unofficial software**: Be very careful! If you lose your account, it is entirely your responsibility.
 
 # Bombcrypto-superbot
@@ -116,6 +117,44 @@ docker rm bsb1 -f
 ```
 
 You may create as many `.env` files as you need. For each account you run using Docker, give a different name when running the `docker run` command. For each bot, you need a **different** telegram key to communicate with them. All commands listed here a simple Docker commands, I highly recommend studying them at the official documentation and learn how it works.
+
+## Docker-compose
+
+Copy the docker-compose.yml file and rename the copy to docker-compose-local.yml, modify the file with your accounts, you can put as many accounts as you like, example of two accounts:
+
+```bash
+version: "3.4"
+
+services:
+  bomb1:
+    build: .
+    restart: always
+    working_dir: "/bombcrypto-superbot"
+    environment:
+      WALLET_ID: "MUDAR"
+      TELEGRAM_KEY: "MUDAR"
+      ADVENTURE: 1
+  bomb2:
+    build: .
+    restart: always
+    working_dir: "/bombcrypto-superbot"
+    environment:
+      WALLET_ID: "MUDAR"
+      TELEGRAM_KEY: "MUDAR"
+      ADVENTURE: 1
+```
+
+To start all accounts at once, run
+
+```bash
+docker-compose -f docker-compose-local.yml up
+```
+
+To always keep your code up to date, run
+
+```bash
+git update && docker-compose -f docker-compose-local.yml up --build
+```
 
 ## Donations
 
