@@ -1,6 +1,7 @@
 import * as crypto from "crypto";
 import { DATE_OFFSET } from "./constants";
 import { makeException } from "./err";
+import { ILoginParams } from "./parsers/login";
 
 export function identity(value: string) {
     return value;
@@ -37,6 +38,37 @@ export function requireAndParseEnv<T>(
     parser: (value: string) => T
 ) {
     return parser(requireEnv(key));
+}
+
+export function parseLogin(value: string): ILoginParams {
+    const fragments = value.split(":");
+
+    const exception = makeException(
+        "WrongUsage",
+        "The login string should be " +
+            "formatted as user|[username]|[password] " +
+            "or wallet|[walletId]|[privateKey]"
+    );
+
+    if (fragments.length !== 3) throw exception;
+
+    const [type, v1, v2] = fragments;
+
+    if (type === "user") {
+        return {
+            type: "user",
+            username: v1,
+            password: v2,
+        };
+    } else if (type === "wallet") {
+        return {
+            type: "wallet",
+            wallet: v1,
+            privateKey: v2,
+        };
+    }
+
+    throw exception;
 }
 
 export function askEnv(key: string) {

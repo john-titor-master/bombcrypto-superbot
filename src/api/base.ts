@@ -5,7 +5,7 @@ import {
     SFSObject,
 } from "sfs2x-api";
 
-import { LC, LT, SALT_KEY, VERSION_CODE } from "../constants";
+import { LC, SALT_KEY, VERSION_CODE } from "../constants";
 import { currentTimeSinceAD, hashMD5 } from "../lib";
 
 export type EGameAction =
@@ -40,9 +40,9 @@ export function hashGameMessage(
     return [hashMD5(message), time];
 }
 
-export function hashLoginMessage(wallet: string) {
+export function hashLoginMessage(pln: string) {
     const time = currentTimeSinceAD();
-    const message = `${wallet}|LOGIN|${time}|${SALT_KEY}`;
+    const message = `${pln}|LOGIN|${time}|${SALT_KEY}`;
     return [hashMD5(message), time];
 }
 
@@ -63,20 +63,26 @@ export function makeGameMessage(
     return new ExtensionRequest(action, params);
 }
 
-export function makeLoginMessage(wallet: string) {
+export function makeLoginMessage(
+    pln: string,
+    password: string,
+    signature: string,
+    lt: number
+) {
     const data = new SFSObject();
     const params = new SFSObject();
-    const [hash, timestamp] = hashLoginMessage(wallet);
+    const [hash, timestamp] = hashLoginMessage(pln);
 
-    data.put("pln", wallet, SFSDataType.UTF_STRING);
-    data.put("password", "", SFSDataType.UTF_STRING);
+    data.put("pln", pln, SFSDataType.UTF_STRING);
+    data.put("password", password, SFSDataType.UTF_STRING);
     data.put("version_code", VERSION_CODE, SFSDataType.INT);
-    data.put("lt", LT, SFSDataType.INT);
+    data.put("lt", lt, SFSDataType.INT);
+    data.put("signature", signature, SFSDataType.UTF_STRING);
 
     params.put("lc", LC, SFSDataType.UTF_STRING);
     params.put("data", data, SFSDataType.SFS_OBJECT);
     params.put("hash", hash, SFSDataType.UTF_STRING);
     params.put("timestamp", timestamp, SFSDataType.LONG);
 
-    return new LoginRequest(wallet, "", params);
+    return new LoginRequest(pln, "", params);
 }

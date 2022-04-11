@@ -22,10 +22,12 @@ import {
     parseStartExplodePayload,
     parseSyncHousePayload,
 } from "./parsers";
+import { ILoginParams } from "./parsers/login";
 
 const DEFAULT_TIMEOUT = 120000;
 const MIN_HERO_ENERGY = 90;
 const HISTORY_SIZE = 5;
+const ADVENTURE_ENABLED = false;
 
 type ExplosionByHero = Map<
     number,
@@ -52,8 +54,8 @@ export class TreasureMapBot {
     private shouldRun: boolean;
     private lastAdventure: number;
 
-    constructor(walletId: string, telegramKey?: string) {
-        this.client = new Client(walletId, DEFAULT_TIMEOUT);
+    constructor(loginParams: ILoginParams, telegramKey?: string) {
+        this.client = new Client(loginParams, DEFAULT_TIMEOUT);
         this.map = new TreasureMap({ blocks: [] });
         this.squad = new Squad({ heroes: [] });
         this.houses = [];
@@ -304,12 +306,17 @@ export class TreasureMapBot {
             if (this.canPlaceBomb(hero, location.tile)) {
                 await this.placeBomb(hero, location.tile);
                 logger.info(this.map.toString());
-            } 
+            }
             await sleep(250);
         }
     }
 
     async adventure() {
+        if (!ADVENTURE_ENABLED) {
+            logger.warn("Adventure mode is deprecated for now.");
+            return;
+        }
+
         const shouldRun = askAndParseEnv("ADVENTURE", parseBoolean, false);
         if (!shouldRun) return logger.info("Will not play adventure.");
 
