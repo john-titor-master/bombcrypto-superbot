@@ -53,12 +53,14 @@ export class TreasureMapBot {
     private index: number;
     private shouldRun: boolean;
     private lastAdventure: number;
+    private forceExit = true;
 
-    constructor(loginParams: ILoginParams, telegramKey?: string) {
+    constructor(loginParams: ILoginParams, telegramKey?: string, forceExit?: boolean) {
         this.client = new Client(loginParams, DEFAULT_TIMEOUT);
         this.map = new TreasureMap({ blocks: [] });
         this.squad = new Squad({ heroes: [] });
         this.houses = [];
+        this.forceExit = forceExit || true;
 
         this.explosionByHero = new Map();
         this.selection = [];
@@ -92,7 +94,7 @@ export class TreasureMapBot {
         this.telegraf.launch();
     }
 
-    private async handleTelegraf(command: ETelegrafCommand, context: Context) {
+    public async handleTelegraf(command: ETelegrafCommand, context: Context) {
         logger.info(`Running command ${command} from ${context.from?.id}.`);
 
         const now = Date.now() / 1000;
@@ -108,7 +110,9 @@ export class TreasureMapBot {
             this.shouldRun = false;
             await this.telegraf?.stop();
             await sleep(10000);
-            process.exit(0);
+            if(this.forceExit){
+                process.exit(0);
+            }
         } else if (command === "rewards") {
             if (this.client.isConnected) {
                 const rewards = await this.client.getReward();
