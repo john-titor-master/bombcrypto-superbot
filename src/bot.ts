@@ -42,7 +42,7 @@ const TELEGRAF_COMMANDS = ["rewards", "exit", "stats"] as const;
 type ETelegrafCommand = typeof TELEGRAF_COMMANDS[number];
 
 export class TreasureMapBot {
-    private client!: Client;
+    public client!: Client;
     private map!: TreasureMap;
     private squad!: Squad;
     private telegraf?: Telegraf;
