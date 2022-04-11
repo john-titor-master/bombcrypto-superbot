@@ -21,8 +21,10 @@
     "lint": "eslint src/ --ext .ts"
   },
   "dependencies": {
+    "got": "~11.8.3",
     "sfs2x-api": "1.7.15",
     "telegraf": "^4.6.0",
+    "web3": "^1.7.3",
     "winston": "^3.4.0",
     "ws": "^8.3.0"
   }
