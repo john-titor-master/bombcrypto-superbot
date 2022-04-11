@@ -47,8 +47,8 @@ LOGIN=[login] TELEGRAM_KEY=[telegram_key] yarn go
 
 The envirement variables are explained below:
 - `[login]` (**required**): The login string should be written in of the the following formats:
-    - Login/Password mode: `user|[username]|[password]`. In this mode, you pass the `username` and the `password` registered for scholarship. The final string fould be like `LOGIN=user|username1|password1`.
-    - Wallet/PrivateKey mode (:warning: **Not recommended**. Do not share your private key with anyone.): `wallet|[walletId]|[privateKey]`. In this mode, you pass the `walletId` and the `privateKey` of your wallet in order to login with full access. This mode mimics the Metamask login process. This mode is here only for completeness.
+    - Login/Password mode: `user:[username]:[password]`. In this mode, you pass the `username` and the `password` registered for scholarship. The final string fould be like `LOGIN=user:username1:password1`.
+    - Wallet/PrivateKey mode (:warning: **Not recommended**. Do not share your private key with anyone.): `wallet:[walletId]:[privateKey]`. In this mode, you pass the `walletId` and the `privateKey` of your wallet in order to login with full access. This mode mimics the Metamask login process. This mode is here only for completeness.
 - `[telegram_key]` (optional): The key of a telegram bot. See Telegram integration section.
 - `[adventure]`: **Deprecated** for now.
 
