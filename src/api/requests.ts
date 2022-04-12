@@ -1,9 +1,11 @@
 import { SFSArray, SFSObject } from "sfs2x-api";
+import Web3 from "web3";
 import { IEnemyTakeDamageInput } from "../parsers";
 import {
     IStartExplodeInput,
     IStartStoryExplodeInput,
 } from "../parsers/explosion";
+import { ILoginParams } from "../parsers/login";
 import { makeGameMessage, makeLoginMessage } from "./base";
 
 export function makePingPongRequest(wallet: string, messageId: number) {
@@ -21,8 +23,22 @@ export function makeGetHeroUpgradePowerRequest(
     return makeGameMessage(wallet, "GET_HERO_UPGRADE_POWER", messageId);
 }
 
-export function makeLoginRequest(wallet: string) {
-    return makeLoginMessage(wallet);
+export function makeLoginSignature(privateKey: string, message: string) {
+    const web3 = new Web3();
+    const result = web3.eth.accounts.sign(message, privateKey);
+
+    return result.signature;
+}
+
+export function makeLoginRequest(params: ILoginParams, message: string) {
+    return params.type === "user"
+        ? makeLoginMessage(params.username, params.password, "", 1)
+        : makeLoginMessage(
+              params.wallet,
+              "",
+              makeLoginSignature(params.privateKey, message),
+              0
+          );
 }
 
 export function makeSyncBombermanRequest(wallet: string, messageId: number) {

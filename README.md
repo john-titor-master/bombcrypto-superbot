@@ -42,13 +42,15 @@ This command may fail if you have changed some of the files locally. If you did 
 Open a bash terminal on the project folder, run the following command:
 
 ```bash
-WALLET_ID=wallet_id TELEGRAM_KEY=telegram_key ADVENTURE=adventure yarn go
+LOGIN=[login] TELEGRAM_KEY=[telegram_key] yarn go
 ```
 
 The envirement variables are explained below:
-- `WALLET_ID` (**required**): The identifier of the wallet you want the bot to run with.
-- `TELEGRAM_KEY` (optional): The key of a telegram bot. See Telegram integration section.
-- `ADVENTURE` (optional) (must be either 0 or 1): This indicates if you want the bot to play adventure mode by itself. The default value is `0` (false), meaning it will not use your keys. If you want the bot to play the adventure mode for you, you can pass `1` (true) to this variable.
+- `[login]` (**required**): The login string should be written in of the the following formats:
+    - Login/Password mode: `user:[username]:[password]`. In this mode, you pass the `username` and the `password` registered for scholarship. The final string fould be like `LOGIN=user:username1:password1`.
+    - Wallet/PrivateKey mode (:warning: **Not recommended**. Do not share your private key with anyone.): `wallet:[walletId]:[privateKey]`. In this mode, you pass the `walletId` and the `privateKey` of your wallet in order to login with full access. This mode mimics the Metamask login process. This mode is here only for completeness.
+- `[telegram_key]` (optional): The key of a telegram bot. See Telegram integration section.
+- `[adventure]`: **Deprecated** for now.
 
 ## Telegram integration
 
@@ -78,10 +80,9 @@ Now, create a `.env` file with the enviroment variables from the initialization,
 ```
 WALLET_ID=
 TELEGRAM_KEY=
-ADVENTURE=
 ```
 
-Fill the values after the `=` (equal) sign. Leave `TELEGRAM_KEY` and `ADVENTURE` empty if you do not need them.
+Fill the values after the `=` (equal) sign. Leave `TELEGRAM_KEY` empty if you do not need it.
 
 To run the bot in **interactive mode**:
 

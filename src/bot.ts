@@ -1,5 +1,4 @@
-import { Telegraf, Context } from "telegraf";
-
+import { Context, Telegraf } from "telegraf";
 import { Client } from "./api";
 import { askAndParseEnv, parseBoolean, sleep } from "./lib";
 import { logger } from "./logger";
@@ -23,10 +22,12 @@ import {
     parseStartExplodePayload,
     parseSyncHousePayload,
 } from "./parsers";
+import { ILoginParams } from "./parsers/login";
 
 const DEFAULT_TIMEOUT = 120000;
-const MIN_HERO_ENERGY = 20;
+const MIN_HERO_ENERGY = 90;
 const HISTORY_SIZE = 5;
+const ADVENTURE_ENABLED = false;
 
 type ExplosionByHero = Map<
     number,
@@ -52,13 +53,9 @@ export class TreasureMapBot {
     private index: number;
     private shouldRun: boolean;
     private lastAdventure: number;
-    private walletId: string;
-    private telegramKey?: string;
 
-    constructor(walletId: string, telegramKey?: string) {
-        this.walletId = walletId
-        this.telegramKey = telegramKey
-        this.client = new Client(walletId, DEFAULT_TIMEOUT);
+    constructor(loginParams: ILoginParams, telegramKey?: string) {
+        this.client = new Client(loginParams, DEFAULT_TIMEOUT);
         this.map = new TreasureMap({ blocks: [] });
         this.squad = new Squad({ heroes: [] });
         this.houses = [];
@@ -122,8 +119,7 @@ export class TreasureMapBot {
 
     async getConfig() {
         return {
-            walletId: this.walletId,
-            telegramKey: this.telegramKey
+            up: true,
         }
     }
 
@@ -162,10 +158,21 @@ export class TreasureMapBot {
                 await context.reply("Not connected, please wait");
             }
         } else if (command === "stats") {
+            const formatMsg = (hero: Hero) =>
+                `${hero.rarity} [${hero.id}]: ${hero.energy}/${hero.maxEnergy}`;
+
+            const workingHeroesLife = this.workingSelection
+                .map(formatMsg)
+                .join("\n");
+            const notWorkingHeroesLife = this.notWorkingSelection
+                .map(formatMsg)
+                .join("\n");
+
             const message =
-                `Working heroes: ${this.workingSelection.length}\n` +
                 `Map: ${this.map.toString()}\n` +
-                `IDX: ${this.index}`;
+                `IDX: ${this.index}\n\n` +
+                `Working heroes (${this.workingSelection.length}): \n${workingHeroesLife}\n\n` +
+                `Resting heroes (${this.notWorkingSelection.length}): \n${notWorkingHeroesLife}`;
 
             await context.reply(message);
         } else {
@@ -177,6 +184,9 @@ export class TreasureMapBot {
         return this.selection.filter(
             (hero) => hero.state === "Work" && hero.energy > 0
         );
+    }
+    get notWorkingSelection() {
+        return this.squad.notWorking;
     }
 
     get home(): House | undefined {
@@ -234,7 +244,8 @@ export class TreasureMapBot {
         this.selection = this.squad.byState("Work");
 
         for (const hero of this.squad.notWorking) {
-            if (hero.energy < MIN_HERO_ENERGY) continue;
+            const percent = (hero.energy / hero.maxEnergy) * 100;
+            if (percent < MIN_HERO_ENERGY) continue;
 
             logger.info(`Sending hero ${hero.id} to work`);
             await this.client.goWork(hero.id);
@@ -290,7 +301,7 @@ export class TreasureMapBot {
 
     async placeBomb(hero: Hero, location: IMapTile) {
         logger.info(
-            `Hero ${hero.id} ${hero.energy}/${hero.maxEnergy} will place ` +
+            `${hero.rarity} ${hero.id} ${hero.energy}/${hero.maxEnergy} will place ` +
             `bomb on (${location.i}, ${location.j})`
         );
 
@@ -325,16 +336,18 @@ export class TreasureMapBot {
 
             if (this.canPlaceBomb(hero, location.tile)) {
                 await this.placeBomb(hero, location.tile);
-            } else {
-                logger.info(`Hero ${hero.id} cannot place bomb now.`);
+                logger.info(this.map.toString());
             }
-
-            logger.info(this.map.toString());
             await sleep(250);
         }
     }
 
     async adventure() {
+        if (!ADVENTURE_ENABLED) {
+            logger.warn("Adventure mode is deprecated for now.");
+            return;
+        }
+
         const shouldRun = askAndParseEnv("ADVENTURE", parseBoolean, false);
         if (!shouldRun) return logger.info("Will not play adventure.");
 

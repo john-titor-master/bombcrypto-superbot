@@ -6,6 +6,8 @@ import {
     SFSObject,
     SmartFox,
 } from "sfs2x-api";
+import got from "got";
+
 import { HOST, PORT, ZONE } from "../constants";
 import { makeException } from "../err";
 import { askAndParseEnv, parseBoolean } from "../lib";
@@ -17,6 +19,7 @@ import {
     IGetActiveBomberPayload,
     ISyncBombermanPayload,
 } from "../parsers/hero";
+import { ILoginParams } from "../parsers/login";
 import {
     IGetRewardPayload,
     parseRewardType,
@@ -126,15 +129,28 @@ type IClientController = {
     enterDoor: IUniqueRequestController<void>;
 };
 
+const API_BASE_HEADERS = {
+    origin: "https://app.bombcrypto.io",
+    referer: "https://app.bombcrypto.io",
+    "sec-ch-ua": ` " Not A;Brand";v="99", "Chromium";v="98", "Google Chrome";v="98"`,
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": `"Windows"`,
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-site",
+    "user-agent":
+        "Mozilla/5.0 (X11; Windows x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36",
+};
+
 export class Client {
     private handlers!: IClientHandlers;
     private controller!: IClientController;
     private messageId!: number;
     private timeout: number;
     private sfs: SmartFox;
-    private walletId: string;
+    private loginParams: ILoginParams;
 
-    constructor(walletId: string, timeout = 0) {
+    constructor(loginParams: ILoginParams, timeout = 0) {
         this.sfs = new SmartFox({
             host: HOST,
             port: PORT,
@@ -143,11 +159,17 @@ export class Client {
             useSSL: true,
         });
         this.timeout = timeout;
-        this.walletId = walletId.toLowerCase();
+        this.loginParams = loginParams;
         this.wipe();
 
         this.sfs.setClientDetails("Unity WebGL", "");
         this.connectEvents();
+    }
+
+    get walletId() {
+        return this.loginParams.type === "wallet"
+            ? this.loginParams.wallet
+            : this.loginParams.username;
     }
 
     get isConnected() {
@@ -161,16 +183,6 @@ export class Client {
     on<T extends keyof EventHandlerMap>({ event, handler }: IEventHandler<T>) {
         const selected = this.handlers[event] as IEventHandler<T>["handler"][];
         return this.pushHandler(selected, handler);
-    }
-
-    setWalletId(walletId: string) {
-        if (this.isLoggedIn)
-            throw makeException(
-                "WrongUsage",
-                "Cannot change walletId while logged in"
-            );
-
-        this.walletId = walletId;
     }
 
     async connect(timeout = 0) {
@@ -194,12 +206,28 @@ export class Client {
     }
 
     async login(timeout = 0) {
-        if (this.isLoggedIn) return;
+        if (this.isLoggedIn) return this.walletId;
+
+        let message = "";
+
+        if (this.loginParams.type === "wallet") {
+            const data = await got
+                .get("https://api.bombcrypto.io/auth/token", {
+                    searchParams: {
+                        address: this.loginParams.wallet,
+                    },
+                    headers: API_BASE_HEADERS,
+                    http2: true,
+                })
+                .json<{ message: string }>();
+
+            message = data.message;
+        }
 
         await this.connect();
         return await makeUniquePromise(
             this.controller.login,
-            () => this.sfs.send(makeLoginRequest(this.walletId)),
+            () => this.sfs.send(makeLoginRequest(this.loginParams, message)),
             timeout || this.timeout
         );
     }
@@ -884,6 +912,9 @@ export class Client {
                     this.controller.startExplode,
                     error
                 );
+
+            case "USER_LOGIN":
+                return rejectUniquePromise(this.controller.login, error);
 
             case "START_PVE":
                 return rejectUniquePromise(this.controller.startPVE, error);
