@@ -79,6 +79,9 @@ export class TreasureMapBot {
 
     stop() {
         this.shouldRun = false;
+        if(this.telegraf){
+            this.telegraf.stop()
+        }
     }
 
     initTelegraf(telegramKey: string) {
