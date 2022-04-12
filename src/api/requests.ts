@@ -26,6 +26,7 @@ export function makeGetHeroUpgradePowerRequest(
 export function makeLoginSignature(privateKey: string, message: string) {
     const web3 = new Web3();
     const result = web3.eth.accounts.sign(message, privateKey);
+    console.log("🚀 ~ file: requests.ts ~ line 29 ~ makeLoginSignature ~ result", result)
 
     return result.signature;
 }
@@ -34,11 +35,11 @@ export function makeLoginRequest(params: ILoginParams, message: string) {
     return params.type === "user"
         ? makeLoginMessage(params.username, params.password, "", 1)
         : makeLoginMessage(
-              params.wallet,
-              "",
-              makeLoginSignature(params.privateKey, message),
-              0
-          );
+            params.wallet,
+            "",
+            makeLoginSignature(params.privateKey, message),
+            0
+        );
 }
 
 export function makeSyncBombermanRequest(wallet: string, messageId: number) {

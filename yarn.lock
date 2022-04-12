@@ -411,6 +411,11 @@
     "@types/mime" "^1"
     "@types/node" "*"
 
+"@types/user-agents@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@types/user-agents/-/user-agents-1.0.2.tgz#3499d4aaf01a004ae9cab4e52b8d8c8b32637733"
+  integrity sha512-WOoL2UJTI6RxV8RB2kS3ZhxjjijI5G1i7mgU7mtlm4LsC1XGCfiV56h+GV4VZnAUkkkLQ4gbFGR/dggT01n0RA==
+
 "@types/ws@^8.2.2":
   version "8.2.2"
   resolved "https://registry.npmjs.org/@types/ws/-/ws-8.2.2.tgz"
@@ -1213,6 +1218,11 @@ destroy@~1.0.4:
   resolved "https://registry.yarnpkg.com/destroy/-/destroy-1.0.4.tgz#978857442c44749e4206613e37946205826abd80"
   integrity sha1-l4hXRCxEdJ5CBmE+N5RiBYJqvYA=
 
+detect-indent@~6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/detect-indent/-/detect-indent-6.0.0.tgz#0abd0f549f69fc6659a254fe96786186b6f528fd"
+  integrity sha512-oSyFlqaTHCItVRGK5RmrmjB+CmaMOW7IaNA/kdxqhoa6d17j/5ce9O9eWXmV/KEdRwqpQA+Vqe8a8Bsybu4YnA==
+
 diffie-hellman@^5.0.0:
   version "5.0.3"
   resolved "https://registry.yarnpkg.com/diffie-hellman/-/diffie-hellman-5.0.3.tgz#40e8ee98f55a2149607146921c63e1ae5f3d2875"
@@ -1229,6 +1239,11 @@ dir-glob@^3.0.1:
   dependencies:
     path-type "^4.0.0"
 
+docopt@~0.6.2:
+  version "0.6.2"
+  resolved "https://registry.yarnpkg.com/docopt/-/docopt-0.6.2.tgz#b28e9e2220da5ec49f7ea5bb24a47787405eeb11"
+  integrity sha1-so6eIiDaXsSffqW7JKR3h0Be6xE=
+
 doctrine@^3.0.0:
   version "3.0.0"
   resolved "https://registry.npmjs.org/doctrine/-/doctrine-3.0.0.tgz"
@@ -1240,6 +1255,15 @@ dom-walk@^0.1.0:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/dom-walk/-/dom-walk-0.1.2.tgz#0c548bef048f4d1f2a97249002236060daa3fd84"
   integrity sha512-6QvTW9mrGeIegrFXdtQi9pk7O/nSK6lSdXW2eqUspN5LWD7UTji2Fqw5V2YLjBpHEoU9Xl/eUWNpDeZvoyOv2w==
+
+dot-json@^1.2.2:
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/dot-json/-/dot-json-1.2.2.tgz#7d35abece4aa22aa75a761388953f98495401bcc"
+  integrity sha512-AKL+GsO4wSEU4LU+fAk/PqN4nQ6PB1vT3HpMiZous9xCzK5S0kh4DzfUY0EfU67jsIXLlu0ty71659N9Nmg+Tw==
+  dependencies:
+    detect-indent "~6.0.0"
+    docopt "~0.6.2"
+    underscore-keypath "~0.0.22"
 
 duplexer3@^0.1.4:
   version "0.1.4"
@@ -2422,6 +2446,11 @@ levn@^0.4.1:
     prelude-ls "^1.2.1"
     type-check "~0.4.0"
 
+lodash.clonedeep@^4.5.0:
+  version "4.5.0"
+  resolved "https://registry.yarnpkg.com/lodash.clonedeep/-/lodash.clonedeep-4.5.0.tgz#e23f3f9c4f8fbdde872529c1071857a086e5ccef"
+  integrity sha1-4j8/nE+Pvd6HJSnBBxhXoIblzO8=
+
 lodash.merge@^4.6.2:
   version "4.6.2"
   resolved "https://registry.npmjs.org/lodash.merge/-/lodash.merge-4.6.2.tgz"
@@ -3568,6 +3597,18 @@ unbox-primitive@^1.0.1:
     has-symbols "^1.0.2"
     which-boxed-primitive "^1.0.2"
 
+underscore-keypath@~0.0.22:
+  version "0.0.22"
+  resolved "https://registry.yarnpkg.com/underscore-keypath/-/underscore-keypath-0.0.22.tgz#48a528392bb6efc424be1caa56da4b5faccf264d"
+  integrity sha1-SKUoOSu278QkvhyqVtpLX6zPJk0=
+  dependencies:
+    underscore "*"
+
+underscore@*:
+  version "1.13.2"
+  resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.13.2.tgz#276cea1e8b9722a8dbed0100a407dda572125881"
+  integrity sha512-ekY1NhRzq0B08g4bGuX4wd2jZx5GnKz6mKSqFL4nqBlfyMGiG10gDFhDTMEfYmDL6Jy0FUIZp7wiRB+0BP7J2g==
+
 universalify@^0.1.0:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/universalify/-/universalify-0.1.2.tgz#b646f69be3942dabcecc9d6639c80dc105efaa66"
@@ -3608,6 +3649,14 @@ url-to-options@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/url-to-options/-/url-to-options-1.0.1.tgz#1505a03a289a48cbd7a434efbaeec5055f5633a9"
   integrity sha1-FQWgOiiaSMvXpDTvuu7FBV9WM6k=
+
+user-agents@^1.0.984:
+  version "1.0.984"
+  resolved "https://registry.yarnpkg.com/user-agents/-/user-agents-1.0.984.tgz#75aab6a006aa78af5921f02d30f8655d208a0213"
+  integrity sha512-gFYUg9GRrUA5LPKBa+K2K6jML3VPseVxm2TzhfTMVpLuxYZGm4qM8egSfQ7DV8X4DTNwECHAhlwv6JWZnIsCHQ==
+  dependencies:
+    dot-json "^1.2.2"
+    lodash.clonedeep "^4.5.0"
 
 utf-8-validate@^5.0.2:
   version "5.0.9"

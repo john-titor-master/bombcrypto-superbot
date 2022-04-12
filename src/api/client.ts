@@ -7,6 +7,8 @@ import {
     SmartFox,
 } from "sfs2x-api";
 import got from "got";
+import UserAgent from 'user-agents';
+
 
 import { HOST, PORT, ZONE } from "../constants";
 import { makeException } from "../err";
@@ -129,6 +131,9 @@ type IClientController = {
     enterDoor: IUniqueRequestController<void>;
 };
 
+
+const userAgent = new UserAgent();
+
 const API_BASE_HEADERS = {
     origin: "https://app.bombcrypto.io",
     referer: "https://app.bombcrypto.io",
@@ -138,8 +143,7 @@ const API_BASE_HEADERS = {
     "sec-fetch-dest": "empty",
     "sec-fetch-mode": "cors",
     "sec-fetch-site": "same-site",
-    "user-agent":
-        "Mozilla/5.0 (X11; Windows x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36",
+    "user-agent": userAgent.toString()
 };
 
 export class Client {
@@ -223,6 +227,8 @@ export class Client {
 
             message = data.message;
         }
+
+        console.log("🚀 ~ file: client.ts ~ line 229 ~ Client ~ login ~ message", message)
 
         await this.connect();
         return await makeUniquePromise(

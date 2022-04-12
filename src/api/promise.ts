@@ -138,6 +138,5 @@ export function rejectUniquePromise<T>(
     context: IUniqueRequestController<T>,
     error: unknown
 ) {
-    console.log("🚀 ~ file: promise.ts ~ line 141 ~ context", context)
     context.current?.reject(error);
 }

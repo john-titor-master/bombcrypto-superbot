@@ -22,10 +22,12 @@
     "lint": "eslint src/ --ext .ts"
   },
   "dependencies": {
+    "@types/user-agents": "^1.0.2",
     "express": "^4.17.3",
     "got": "~11.8.3",
     "sfs2x-api": "1.7.15",
     "telegraf": "^4.6.0",
+    "user-agents": "^1.0.984",
     "web3": "^1.7.3",
     "winston": "^3.4.0",
     "ws": "^8.3.0"
