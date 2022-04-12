@@ -1,12 +1,12 @@
 import winston from "winston";
-import { askAndParseEnv, parseBoolean, requireEnv } from "./lib";
+import { askAndParseEnv, askEnv, parseBoolean } from "./lib";
 
 const formatter = winston.format.printf(({ level, message, timestamp }) => {
     return `${timestamp} [${level}]: ${message}`;
 });
 
 
-const level = requireEnv("DEBUG_LEVEL") || "info";
+const level = askEnv("DEBUG_LEVEL") || "info";
 
 export const logger = winston.createLogger({
     level: askAndParseEnv("DEBUG", parseBoolean, false) ? "debug" : level,
