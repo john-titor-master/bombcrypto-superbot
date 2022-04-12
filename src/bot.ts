@@ -55,7 +55,11 @@ export class TreasureMapBot {
     private lastAdventure: number;
     private forceExit = true;
 
-    constructor(loginParams: ILoginParams, telegramKey?: string, forceExit?: boolean) {
+    constructor(
+        loginParams: ILoginParams,
+        telegramKey?: string,
+        forceExit?: boolean
+    ) {
         this.client = new Client(loginParams, DEFAULT_TIMEOUT);
         this.map = new TreasureMap({ blocks: [] });
         this.squad = new Squad({ heroes: [] });
@@ -110,7 +114,7 @@ export class TreasureMapBot {
             this.shouldRun = false;
             await this.telegraf?.stop();
             await sleep(10000);
-            if(this.forceExit){
+            if (this.forceExit) {
                 process.exit(0);
             }
         } else if (command === "rewards") {
