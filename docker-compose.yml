@@ -6,17 +6,15 @@ services:
     restart: always
     working_dir: "/bombcrypto-superbot"
     environment:
-      WALLET_ID: "MUDAR"
+      LOGIN: "MUDAR"
       TELEGRAM_KEY: "MUDAR"
-      ADVENTURE: 1
   bomb2:
     build: .
     restart: always
     working_dir: "/bombcrypto-superbot"
     environment:
-      WALLET_ID: "MUDAR"
+      LOGIN: "MUDAR"
       TELEGRAM_KEY: "MUDAR"
-      ADVENTURE: 1
 
 
 
