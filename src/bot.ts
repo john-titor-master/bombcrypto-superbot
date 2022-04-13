@@ -25,7 +25,6 @@ import {
 import { ILoginParams } from "./parsers/login";
 
 const DEFAULT_TIMEOUT = 120000;
-const MIN_HERO_ENERGY = 90;
 const HISTORY_SIZE = 5;
 const ADVENTURE_ENABLED = false;
 
@@ -36,6 +35,12 @@ type ExplosionByHero = Map<
         tile: IMapTile;
     }
 >;
+
+interface IMoreOptions {
+    telegramKey?: string
+    forceExit?: boolean
+    minHeroEnergyPercentage?: number
+}
 
 const TELEGRAF_COMMANDS = ["rewards", "exit", "stats"] as const;
 
@@ -54,17 +59,20 @@ export class TreasureMapBot {
     private shouldRun: boolean;
     private lastAdventure: number;
     private forceExit = true;
+    private minHeroEnergyPercentage;
 
     constructor(
         loginParams: ILoginParams,
-        telegramKey?: string,
-        forceExit?: boolean
+        moreParams: IMoreOptions
     ) {
+        const {forceExit = true, minHeroEnergyPercentage = 90, telegramKey} = moreParams;
+
         this.client = new Client(loginParams, DEFAULT_TIMEOUT);
         this.map = new TreasureMap({ blocks: [] });
         this.squad = new Squad({ heroes: [] });
         this.houses = [];
         this.forceExit = forceExit || true;
+        this.minHeroEnergyPercentage = minHeroEnergyPercentage
 
         this.explosionByHero = new Map();
         this.selection = [];
@@ -225,7 +233,7 @@ export class TreasureMapBot {
 
         for (const hero of this.squad.notWorking) {
             const percent = (hero.energy / hero.maxEnergy) * 100;
-            if (percent < MIN_HERO_ENERGY) continue;
+            if (percent < this.minHeroEnergyPercentage) continue;
 
             logger.info(`Sending hero ${hero.id} to work`);
             await this.client.goWork(hero.id);

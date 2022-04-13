@@ -11,7 +11,10 @@ async function main() {
 
     const bot = new TreasureMapBot(
         params,
-        askAndParseEnv("TELEGRAM_KEY", identity, "")
+        { 
+            telegramKey: askAndParseEnv("TELEGRAM_KEY", identity, ""),
+            minHeroEnergyPercentage: parseInt(askAndParseEnv("MIN_HERO_ENERGY_PERCENTAGE", identity, '90'))
+        }
     );
 
     process.once("SIGINT", () => {
