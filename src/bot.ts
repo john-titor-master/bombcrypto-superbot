@@ -37,9 +37,9 @@ type ExplosionByHero = Map<
 >;
 
 interface IMoreOptions {
-    telegramKey?: string
-    forceExit?: boolean
-    minHeroEnergyPercentage?: number
+    telegramKey?: string;
+    forceExit?: boolean;
+    minHeroEnergyPercentage?: number;
 }
 
 const TELEGRAF_COMMANDS = ["rewards", "exit", "stats"] as const;
@@ -61,18 +61,19 @@ export class TreasureMapBot {
     private forceExit = true;
     private minHeroEnergyPercentage;
 
-    constructor(
-        loginParams: ILoginParams,
-        moreParams: IMoreOptions
-    ) {
-        const {forceExit = true, minHeroEnergyPercentage = 90, telegramKey} = moreParams;
+    constructor(loginParams: ILoginParams, moreParams: IMoreOptions) {
+        const {
+            forceExit = true,
+            minHeroEnergyPercentage = 90,
+            telegramKey,
+        } = moreParams;
 
         this.client = new Client(loginParams, DEFAULT_TIMEOUT);
         this.map = new TreasureMap({ blocks: [] });
         this.squad = new Squad({ heroes: [] });
         this.houses = [];
         this.forceExit = forceExit || true;
-        this.minHeroEnergyPercentage = minHeroEnergyPercentage
+        this.minHeroEnergyPercentage = minHeroEnergyPercentage;
 
         this.explosionByHero = new Map();
         this.selection = [];
@@ -87,8 +88,8 @@ export class TreasureMapBot {
 
     stop() {
         this.shouldRun = false;
-        if(this.telegraf){
-            this.telegraf.stop()
+        if (this.telegraf) {
+            this.telegraf.stop();
         }
     }
 

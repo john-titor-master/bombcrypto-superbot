@@ -5,7 +5,6 @@ const formatter = winston.format.printf(({ level, message, timestamp }) => {
     return `${timestamp} [${level}]: ${message}`;
 });
 
-
 const level = askEnv("DEBUG_LEVEL") || "info";
 
 export const logger = winston.createLogger({
