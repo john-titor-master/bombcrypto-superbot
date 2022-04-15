@@ -57,13 +57,13 @@ export function parseLogin(value: string): ILoginParams {
     if (type === "user") {
         return {
             type: "user",
-            username: v1,
+            username: v1.toLowerCase(),
             password: v2,
         };
     } else if (type === "wallet") {
         return {
             type: "wallet",
-            wallet: v1,
+            wallet: v1.toLowerCase(),
             privateKey: v2,
         };
     }
