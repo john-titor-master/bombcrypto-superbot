@@ -80,7 +80,7 @@ docker build . -t bsb
 Now, create a `.env` file with the enviroment variables from the initialization, like:
 
 ```
-WALLET_ID=
+LOGIN=
 TELEGRAM_KEY=
 ```
 
