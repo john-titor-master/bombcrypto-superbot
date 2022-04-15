@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "got": "~11.8.3",
+    "reverse-md5": "0.0.5",
     "sfs2x-api": "1.7.15",
     "telegraf": "^4.6.0",
     "web3": "^1.7.3",

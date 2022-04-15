@@ -139,7 +139,7 @@ export class TreasureMapBot {
                     `Mined: ${detail.mined} | Invested: ${detail.invested} ` +
                     `| Rewards: ${detail.rewards}\n` +
                     rewards
-                        .map((reward) => `${reward.type}: ${reward.value}`)
+                        .map((reward) => `${reward.type}: ${reward.value.toFixed(2)}`)
                         .join("\n");
 
                 await context.reply(message);
