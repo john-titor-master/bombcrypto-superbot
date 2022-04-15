@@ -77,6 +77,7 @@ export function makeLoginMessage(
     data.put("password", password, SFSDataType.UTF_STRING);
     data.put("version_code", VERSION_CODE, SFSDataType.INT);
     data.put("lt", lt, SFSDataType.INT);
+    data.put("slogan", "senspark", SFSDataType.UTF_STRING);
     data.put("signature", signature, SFSDataType.UTF_STRING);
 
     params.put("lc", LC, SFSDataType.UTF_STRING);
