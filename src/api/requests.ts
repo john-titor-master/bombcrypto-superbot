@@ -47,11 +47,15 @@ export function makeSyncBombermanRequest(wallet: string, messageId: number) {
 }
 
 export function makeStartPVERequest(wallet: string, messageId: number) {
-    return makeGameMessage(wallet, "START_PVE", messageId);
+    const data = new SFSObject();
+    data.putUtfString("slogan", "gold_miner");
+    return makeGameMessage(wallet, "START_PVE", messageId, data);
 }
 
 export function makeStopPVERequest(wallet: string, messageId: number) {
-    return makeGameMessage(wallet, "STOP_PVE", messageId);
+    const data = new SFSObject();
+    data.putUtfString("slogan", "stick_war");
+    return makeGameMessage(wallet, "STOP_PVE", messageId, data);
 }
 
 export function makeSyncHouseRequest(wallet: string, messageId: number) {

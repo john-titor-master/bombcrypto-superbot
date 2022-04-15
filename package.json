@@ -19,7 +19,9 @@
     "build": "tsc",
     "format:check": "yarn prettier --check src/",
     "format": "yarn prettier --write src/",
-    "lint": "eslint src/ --ext .ts"
+    "lint": "eslint src/ --ext .ts",
+    "re:run": "node -r ./build/websocket.js --unhandled-rejections=strict build/reverse.js",
+    "re": "yarn build && yarn re:run"
   },
   "dependencies": {
     "@types/user-agents": "^1.0.2",
