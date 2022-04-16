@@ -19,6 +19,10 @@ export function parseRewardType(reward: string): ERewardType {
     return isRewardKey(reward) ? REWARD_MAP[reward] : "Unknown";
 }
 
+export const isFloat = (n: number): boolean => {
+    return n.toString().split(".")[1] !== undefined;
+};
+
 export type IGetRewardPayload = {
     remainTime: number;
     type: ERewardType;

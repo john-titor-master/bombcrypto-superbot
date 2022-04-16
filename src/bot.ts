@@ -16,6 +16,7 @@ import {
 } from "./model";
 import {
     IGetActiveBomberPayload,
+    isFloat,
     IStartExplodePayload,
     parseGetActiveBomberPayload,
     parseGetBlockMapPayload,
@@ -139,7 +140,14 @@ export class TreasureMapBot {
                     `Mined: ${detail.mined} | Invested: ${detail.invested} ` +
                     `| Rewards: ${detail.rewards}\n` +
                     rewards
-                        .map((reward) => `${reward.type}: ${reward.value.toFixed(2)}`)
+                        .map(
+                            (reward) =>
+                                `${reward.type}: ${
+                                    isFloat(reward.value)
+                                        ? reward.value.toFixed(2)
+                                        : reward.value
+                                }`
+                        )
                         .join("\n");
 
                 await context.reply(message);
