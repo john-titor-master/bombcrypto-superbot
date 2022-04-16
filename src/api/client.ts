@@ -7,7 +7,7 @@ import {
     SmartFox,
 } from "sfs2x-api";
 import got from "got";
-
+import UserAgent from "user-agents";
 import { HOST, PORT, ZONE } from "../constants";
 import { makeException } from "../err";
 import { askAndParseEnv, parseBoolean } from "../lib";
@@ -129,19 +129,6 @@ type IClientController = {
     enterDoor: IUniqueRequestController<void>;
 };
 
-const API_BASE_HEADERS = {
-    origin: "https://app.bombcrypto.io",
-    referer: "https://app.bombcrypto.io",
-    "sec-ch-ua": ` " Not A;Brand";v="99", "Chromium";v="98", "Google Chrome";v="98"`,
-    "sec-ch-ua-mobile": "?0",
-    "sec-ch-ua-platform": `"Windows"`,
-    "sec-fetch-dest": "empty",
-    "sec-fetch-mode": "cors",
-    "sec-fetch-site": "same-site",
-    "user-agent":
-        "Mozilla/5.0 (X11; Windows x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36",
-};
-
 export class Client {
     private handlers!: IClientHandlers;
     private controller!: IClientController;
@@ -149,8 +136,22 @@ export class Client {
     private timeout: number;
     private sfs: SmartFox;
     private loginParams: ILoginParams;
+    private apiBaseHeaders;
 
     constructor(loginParams: ILoginParams, timeout = 0) {
+        const userAgent = new UserAgent();
+        this.apiBaseHeaders = {
+            origin: "https://app.bombcrypto.io",
+            referer: "https://app.bombcrypto.io",
+            "sec-ch-ua": ` " Not A;Brand";v="99", "Chromium";v="98", "Google Chrome";v="98"`,
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": `"Windows"`,
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-site",
+            "user-agent": userAgent.toString(),
+        };
+        console.log(this.apiBaseHeaders);
         this.sfs = new SmartFox({
             host: HOST,
             port: PORT,
@@ -216,7 +217,7 @@ export class Client {
                     searchParams: {
                         address: this.loginParams.wallet,
                     },
-                    headers: API_BASE_HEADERS,
+                    headers: this.apiBaseHeaders,
                     http2: true,
                 })
                 .json<{ message: string }>();
