@@ -151,7 +151,6 @@ export class Client {
             "sec-fetch-site": "same-site",
             "user-agent": userAgent.toString(),
         };
-        console.log(this.apiBaseHeaders);
         this.sfs = new SmartFox({
             host: HOST,
             port: PORT,
