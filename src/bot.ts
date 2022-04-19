@@ -131,6 +131,32 @@ export class TreasureMapBot {
         return message;
     }
 
+    public async getRewardAccount(){
+        if (this.client.isConnected) {
+            const rewards = await this.client.getReward();
+            const detail = await this.client.coinDetail();
+
+            const message =
+                "Rewards:\n" +
+                `Mined: ${detail.mined} | Invested: ${detail.invested} ` +
+                `| Rewards: ${detail.rewards}\n` +
+                rewards
+                    .map(
+                        (reward) =>
+                            `${reward.type}: ${
+                                isFloat(reward.value)
+                                    ? reward.value.toFixed(2)
+                                    : reward.value
+                            }`
+                    )
+                    .join("\n");
+
+            return message
+        } else {
+             throw new Error("Not connected, please wait");
+        }
+    }
+
     public async handleTelegraf(command: ETelegrafCommand, context: Context) {
         logger.info(`Running command ${command} from ${context.from?.id}.`);
 
@@ -151,28 +177,11 @@ export class TreasureMapBot {
                 process.exit(0);
             }
         } else if (command === "rewards") {
-            if (this.client.isConnected) {
-                const rewards = await this.client.getReward();
-                const detail = await this.client.coinDetail();
-
-                const message =
-                    "Rewards:\n" +
-                    `Mined: ${detail.mined} | Invested: ${detail.invested} ` +
-                    `| Rewards: ${detail.rewards}\n` +
-                    rewards
-                        .map(
-                            (reward) =>
-                                `${reward.type}: ${
-                                    isFloat(reward.value)
-                                        ? reward.value.toFixed(2)
-                                        : reward.value
-                                }`
-                        )
-                        .join("\n");
-
+            try{
+                const message = await this.getRewardAccount()
                 await context.reply(message);
-            } else {
-                await context.reply("Not connected, please wait");
+            }catch(e){
+                await context.reply(e);
             }
         } else if (command === "stats") {
             const message = await this.getStatsAccount();
