@@ -39,6 +39,7 @@ export class ControlledPromise<T> {
                 timeout
             );
         } catch (error) {
+            this.clearTimeout()
             this.rejectFn(error);
         }
     }
