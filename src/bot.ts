@@ -111,6 +111,26 @@ export class TreasureMapBot {
         this.telegraf.launch();
     }
 
+    public async getStatsAccount() {
+        const formatMsg = (hero: Hero) =>
+            `${hero.rarity} [${hero.id}]: ${hero.energy}/${hero.maxEnergy}`;
+
+        const workingHeroesLife = this.workingSelection
+            .map(formatMsg)
+            .join("\n");
+        const notWorkingHeroesLife = this.notWorkingSelection
+            .map(formatMsg)
+            .join("\n");
+
+        const message =
+            `Map: ${this.map.toString()}\n` +
+            `IDX: ${this.index}\n\n` +
+            `Working heroes (${this.workingSelection.length}): \n${workingHeroesLife}\n\n` +
+            `Resting heroes (${this.notWorkingSelection.length}): \n${notWorkingHeroesLife}`;
+
+        return message;
+    }
+
     public async handleTelegraf(command: ETelegrafCommand, context: Context) {
         logger.info(`Running command ${command} from ${context.from?.id}.`);
 
@@ -155,22 +175,7 @@ export class TreasureMapBot {
                 await context.reply("Not connected, please wait");
             }
         } else if (command === "stats") {
-            const formatMsg = (hero: Hero) =>
-                `${hero.rarity} [${hero.id}]: ${hero.energy}/${hero.maxEnergy}`;
-
-            const workingHeroesLife = this.workingSelection
-                .map(formatMsg)
-                .join("\n");
-            const notWorkingHeroesLife = this.notWorkingSelection
-                .map(formatMsg)
-                .join("\n");
-
-            const message =
-                `Map: ${this.map.toString()}\n` +
-                `IDX: ${this.index}\n\n` +
-                `Working heroes (${this.workingSelection.length}): \n${workingHeroesLife}\n\n` +
-                `Resting heroes (${this.notWorkingSelection.length}): \n${notWorkingHeroesLife}`;
-
+            const message = await this.getStatsAccount();
             await context.reply(message);
         } else {
             await context.reply("Command not implemented");
