@@ -181,7 +181,7 @@ export class TreasureMapBot {
                 const message = await this.getRewardAccount()
                 await context.reply(message);
             }catch(e){
-                await context.reply(e);
+                await context.reply('Not connected, please wait');
             }
         } else if (command === "stats") {
             const message = await this.getStatsAccount();
