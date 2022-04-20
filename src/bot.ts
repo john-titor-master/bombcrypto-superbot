@@ -131,7 +131,7 @@ export class TreasureMapBot {
         return message;
     }
 
-    public async getRewardAccount(){
+    public async getRewardAccount() {
         if (this.client.isConnected) {
             const rewards = await this.client.getReward();
             const detail = await this.client.coinDetail();
@@ -151,9 +151,9 @@ export class TreasureMapBot {
                     )
                     .join("\n");
 
-            return message
+            return message;
         } else {
-             throw new Error("Not connected, please wait");
+            throw new Error("Not connected, please wait");
         }
     }
 
@@ -177,11 +177,11 @@ export class TreasureMapBot {
                 process.exit(0);
             }
         } else if (command === "rewards") {
-            try{
-                const message = await this.getRewardAccount()
+            try {
+                const message = await this.getRewardAccount();
                 await context.reply(message);
-            }catch(e){
-                await context.reply('Not connected, please wait');
+            } catch (e) {
+                await context.reply("Not connected, please wait");
             }
         } else if (command === "stats") {
             const message = await this.getStatsAccount();
