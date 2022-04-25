@@ -341,7 +341,7 @@ export class TreasureMapBot {
     }
 
     async placeBombs() {
-        while (this.map.totalLife > 0 && this.workingSelection.length > 0) {
+        while (this.map.totalLife > 0 && this.workingSelection.length > 0 && this.shouldRun) {
             const hero = this.nextHero();
             const location = this.nextLocation(hero);
 
