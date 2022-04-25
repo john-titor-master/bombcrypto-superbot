@@ -198,11 +198,21 @@ export class Client {
     async disconnect(timeout = 0) {
         if (!this.isConnected) return;
 
-        return await makeUniquePromise(
+        const result = await makeUniquePromise(
             this.controller.disconnect,
             () => this.sfs.disconnect(),
             timeout || this.timeout
         );
+
+
+
+        return result
+    }
+
+    async removeAllPromises(){
+        Object.values(this.controller).map(value => {
+            value.current?.reject(new Error("Canceled"));
+        })
     }
 
     async login(timeout = 0) {
