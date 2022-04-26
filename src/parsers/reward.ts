@@ -2,6 +2,7 @@ const REWARD_MAP = {
     BOMBERMAN: "Bomberman",
     BCOIN: "BCoin",
     KEY: "Key",
+    SENSPARK: "Senspark",
 } as const;
 
 export type ERewardType =

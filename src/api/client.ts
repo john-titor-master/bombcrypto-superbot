@@ -802,6 +802,7 @@ export class Client {
                     value: reward.getFloat("value"),
                 };
             });
+        console.log("🚀 ~ file: client.ts ~ line 806 ~ Client ~ handleGetReward ~ rewards", rewards)
 
         resolveUniquePromise(this.controller.getReward, rewards);
         this.callHandler(this.handlers.getReward, rewards);
