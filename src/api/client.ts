@@ -39,6 +39,7 @@ import {
     resolveUniquePromise,
 } from "./promise";
 import {
+    makeClaimRequest,
     makeCoinDetailRequest,
     makeEnterDoorRequest,
     makeGetActiveBomberRequest,
@@ -83,6 +84,7 @@ type EventHandlerMap = {
     syncHouse: (houses: ISyncHousePayload[]) => void;
     getActiveBomber: (heroes: IGetActiveBomberPayload[]) => void;
     syncBomberman: (heroes: ISyncBombermanPayload[]) => void;
+    claim: () => void;
     startPVE: () => void;
     stopPVE: () => void;
     startExplode: (payload: IStartExplodePayload) => void;
@@ -119,6 +121,7 @@ type IClientController = {
     getActiveHeroes: IUniqueRequestController<IGetActiveBomberPayload[]>;
     syncBomberman: IUniqueRequestController<ISyncBombermanPayload[]>;
     startPVE: IUniqueRequestController<void>;
+    claim: IUniqueRequestController<void>;
     stopPVE: IUniqueRequestController<void>;
     startExplode: ISerializedRequestController<IStartExplodePayload>;
     goSleep: ISerializedRequestController<IHeroUpdateParams>;
@@ -361,6 +364,23 @@ export class Client {
         );
     }
 
+    claim(timeout = 0) {
+        this.ensureLoggedIn();
+
+        return makeUniquePromise(
+            this.controller.claim,
+            () => {
+                const request = makeClaimRequest(
+                    this.walletId,
+                    this.nextId()
+                );
+                this.sfs.send(request);
+            },
+            timeout || this.timeout
+        );
+    }
+
+
     stopPVE(timeout = 0) {
         this.ensureLoggedIn();
 
@@ -525,6 +545,7 @@ export class Client {
             syncHouse: [],
             getActiveBomber: [],
             syncBomberman: [],
+            claim: [],
             startPVE: [],
             stopPVE: [],
             startExplode: [],
@@ -565,6 +586,9 @@ export class Client {
                 current: undefined,
             },
             syncBomberman: {
+                current: undefined,
+            },
+            claim: {
                 current: undefined,
             },
             startPVE: {
@@ -753,6 +777,12 @@ export class Client {
         this.callHandler(this.handlers.startPVE);
     }
 
+    private handleClaim() {
+        resolveUniquePromise(this.controller.claim, undefined);
+        this.callHandler(this.handlers.claim);
+    }
+
+
     private handleStopPVE() {
         resolveUniquePromise(this.controller.stopPVE, undefined);
         this.callHandler(this.handlers.stopPVE);
@@ -926,6 +956,9 @@ export class Client {
             case "START_PVE":
                 return rejectUniquePromise(this.controller.startPVE, error);
 
+            case "APPROVE_CLAIM":
+                return rejectUniquePromise(this.controller.claim, error);
+
             case "STOP_PVE":
                 return rejectUniquePromise(this.controller.stopPVE, error);
 
@@ -1042,6 +1075,9 @@ export class Client {
 
             case "START_PVE":
                 return this.handleStartPVE();
+
+            case "APPROVE_CLAIM":
+                return this.handleClaim();
 
             case "STOP_PVE":
                 return this.handleStopPVE();

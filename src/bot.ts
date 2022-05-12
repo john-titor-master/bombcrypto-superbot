@@ -109,6 +109,15 @@ export class TreasureMapBot {
         return null
     }
 
+    async claim() {
+        if (this.client.isConnected) {
+            const res = await this.client.claim();
+            return res
+        }
+
+        return null
+    }
+
     async getStats() {
         return {
             workingHeroes: this.workingSelection.length,

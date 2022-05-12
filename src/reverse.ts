@@ -30,6 +30,43 @@ function decodeMessage(base64: string): string {
 // CONNECT Request
 console.log(
     decodeMessage(
-        `gAFNEgADAAFwEgACAAFwEgADAAp0b2tlbl90eXBlCAAFQkNPSU4AB3Jld2FyZHMRAAUSAAMAC3JlbWFpbl90aW1lBAAAAAAABHR5cGUIAAVCQ09JTgAFdmFsdWUGQWHighIAAwALcmVtYWluX3RpbWUEAAAAAAAEdHlwZQgACUJPTUJFUk1BTgAFdmFsdWUGAAAAABIAAwALcmVtYWluX3RpbWUEAAAAAAAEdHlwZQgAA0tFWQAFdmFsdWUGP4AAABIAAwALcmVtYWluX3RpbWUEAAAAAAAEdHlwZQgAD0JDT0lOX0RFUE9TSVRFRAAFdmFsdWUGAAAAABIAAwALcmVtYWluX3RpbWUEAAAAUAAEdHlwZQgACFNFTlNQQVJLAAV2YWx1ZQY9dmpVAAJlYwQAAAAAAAFjCAAKR0VUX1JFV0FSRAABYQMADQABYwIB`
+        `gACcEgADAAFjAgEAAWEDAA0AAXASAAMAAWMIAA1BUFBST1ZFX0NMQUlNAAFyBP////8AAXASAAQABGRhdGESAAEAEWJsb2NrX3Jld2FyZF90eXBlBAAAAAEAAmlkBAAAAAkABGhhc2gIACBmMDdkYjg2OWVhNTBmZDY3ZmY1YzM1NWExMTgzZGZhMgAJdGltZXN0YW1wBQAAOgPKnXoP`
     )
 );
+
+
+// //  claim SEN // // 
+//
+// (utf_string) c: APPROVE_CLAIM
+// (int) r: -1
+// (sfs_object) p: 
+//         (sfs_object) data: 
+//                 (int) block_reward_type: 7
+//
+//         (int) id: 9
+//         (utf_string) hash: e003abed027045b95724985a05121b03
+//         (long) timestamp: 63787958174925
+
+// // BCOIN
+// (utf_string) c: APPROVE_CLAIM
+// (int) r: -1
+// (sfs_object) p: 
+//         (sfs_object) data: 
+//                 (int) block_reward_type: 1
+//
+//         (int) id: 9
+//         (utf_string) hash: f07db869ea50fd67ff5c355a1183dfa2
+//         (long) timestamp: 63787958630927
+
+
+// // 
+// (utf_string) c: START_PVE
+// (int) r: -1
+// (sfs_object) p: 
+//         (sfs_object) data: 
+//                 (utf_string) slogan: gold_miner
+
+
+//         (int) id: 13
+//         (utf_string) hash: 87309b0769dddfa441eaee4f7d80c89b
+//         (long) timestamp: 63787958478405

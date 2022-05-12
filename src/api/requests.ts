@@ -1,5 +1,6 @@
 import { SFSArray, SFSObject } from "sfs2x-api";
 import Web3 from "web3";
+import { block_reward_type } from "..";
 import { IEnemyTakeDamageInput } from "../parsers";
 import {
     IStartExplodeInput,
@@ -50,6 +51,13 @@ export function makeStartPVERequest(wallet: string, messageId: number) {
     const data = new SFSObject();
     data.putUtfString("slogan", "gold_miner");
     return makeGameMessage(wallet, "START_PVE", messageId, data);
+}
+
+export function makeClaimRequest(wallet: string, messageId: number) { // 9
+    const data = new SFSObject();
+    console.log("🚀 ~ file: requests.ts ~ line 59 ~ makeClaimRequest ~ block_reward_type", block_reward_type)
+    data.putInt("block_reward_type", block_reward_type);
+    return makeGameMessage(wallet, "APPROVE_CLAIM", messageId, data);
 }
 
 export function makeStopPVERequest(wallet: string, messageId: number) {

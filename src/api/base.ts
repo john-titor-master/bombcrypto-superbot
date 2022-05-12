@@ -28,6 +28,7 @@ export type EGameAction =
     | "GET_STORY_MAP"
     | "START_STORY_EXPLODE"
     | "ENEMY_TAKE_DAMAGE"
+    | "APPROVE_CLAIM"
     | "ENTER_DOOR";
 
 export function hashGameMessage(
