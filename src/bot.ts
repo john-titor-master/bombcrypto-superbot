@@ -429,7 +429,7 @@ export class TreasureMapBot {
     async placeBombsHero(hero: Hero) {
         const location = this.nextLocation(hero);
 
-        if (this.canPlaceBomb(hero, location.tile)) {
+        if (location && this.canPlaceBomb(hero, location.tile)) {
             await this.placeBomb(hero, location.tile);
         }
     }
