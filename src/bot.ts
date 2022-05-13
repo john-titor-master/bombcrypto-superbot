@@ -406,6 +406,11 @@ export class TreasureMapBot {
             j: location.j,
         });
 
+
+        this.removeBombHero(hero, bombId);
+
+
+
         if (!result) {
             return false;
         }
@@ -413,8 +418,6 @@ export class TreasureMapBot {
         const { energy } = result;
 
         while (this.history.length > HISTORY_SIZE) this.history.shift();
-
-        this.removeBombHero(hero, bombId);
 
         if (energy <= 0) {
             logger.info(`Sending hero ${hero.id} to sleep`);
