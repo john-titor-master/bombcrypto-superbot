@@ -20,7 +20,7 @@
     "format:check": "yarn prettier --check src/",
     "format": "yarn prettier --write src/",
     "lint": "eslint src/ --ext .ts",
-    "re:run": "node -r ./build/websocket.js --unhandled-rejections=strict build/reverse.js",
+    "re:run": "yarn run build && node -r ./build/websocket.js --unhandled-rejections=strict build/reverse.js",
     "re": "yarn build && yarn re:run"
   },
   "dependencies": {

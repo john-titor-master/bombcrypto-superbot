@@ -204,15 +204,13 @@ export class Client {
             timeout || this.timeout
         );
 
-
-
-        return result
+        return result;
     }
 
-    async removeAllPromises(){
-        Object.values(this.controller).map(value => {
+    async removeAllPromises() {
+        Object.values(this.controller).map((value) => {
             value.current?.reject(new Error("Canceled"));
-        })
+        });
     }
 
     async login(timeout = 0) {
@@ -897,6 +895,7 @@ export class Client {
             "MessageError",
             `Failed with code ${errorCode}`
         );
+        console.log("errorrr", command);
 
         switch (command) {
             case "GET_BLOCK_MAP":
@@ -918,10 +917,17 @@ export class Client {
                 );
 
             case "START_EXPLODE":
-                return rejectSerializedPromise(
-                    this.controller.startExplode,
-                    error
+                resolveUniquePromise(
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    this.controller.startExplode as any,
+                    undefined
                 );
+                console.log("START_EXPLODESTART_EXPLODESTART_EXPLODE");
+                // return rejectSerializedPromise(
+                //     this.controller.startExplode,
+                //     error
+                // );
+                break;
 
             case "USER_LOGIN":
                 return rejectUniquePromise(this.controller.login, error);

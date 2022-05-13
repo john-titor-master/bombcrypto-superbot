@@ -16,12 +16,12 @@ async function main() {
         ),
     });
 
-    process.once("SIGINT", () => {
-        bot.stop();
+    process.once("SIGINT", async () => {
+        await bot.stop();
         process.exit();
     });
-    process.once("SIGTERM", () => {
-        bot.stop();
+    process.once("SIGTERM", async () => {
+        await bot.stop();
         process.exit();
     });
 
