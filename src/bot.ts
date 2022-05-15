@@ -320,8 +320,9 @@ export class TreasureMapBot {
                         (tile) => tile.i === option.i && tile.j === option.j
                     )
             );
+selected = items[0];
             //random
-            selected = items[Math.floor(Math.random() * items.length)];
+            //selected = items[Math.floor(Math.random() * items.length)];
         }
         if (!selected) {
             selected = locations[0];
