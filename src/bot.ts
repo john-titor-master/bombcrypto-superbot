@@ -301,8 +301,11 @@ export class TreasureMapBot {
     nextLocation(hero: Hero) {
         //verifica se ele ja esta jogando a bomba em um local
         const result = this.locationByHeroWorking.get(hero.id);
+        const location = this.map
+            .getHeroDamageForMap(hero)
+            .find(({ tile }) => tile.i == result?.tile.i && tile.j == result?.tile.j);
 
-        if (result) {
+        if (result && location && location.damage > 0) {
             return result;
         }
         const locations = this.map
