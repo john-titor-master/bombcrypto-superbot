@@ -343,7 +343,7 @@ selected = items[0];
             Math.abs(location.i - entry.tile.i) +
             Math.abs(location.j - entry.tile.j);
 
-        const timedelta = (distance / hero.speed) * 1000 * 1.2;
+        const timedelta = (distance / hero.speed) * 1000 ;
         const elapsed = Date.now() - entry.timestamp;
 
         const bombs = this.heroBombs[hero.id]?.ids.length || 0;
