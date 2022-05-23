@@ -48,6 +48,7 @@ export function makeSyncBombermanRequest(wallet: string, messageId: number) {
 export function makeStartPVERequest(wallet: string, messageId: number) {
     const data = new SFSObject();
     data.putUtfString("slogan", "gold_miner");
+    data.putInt("mode", 1);
     return makeGameMessage(wallet, "START_PVE", messageId, data);
 }
 

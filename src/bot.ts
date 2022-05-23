@@ -303,7 +303,10 @@ export class TreasureMapBot {
         const result = this.locationByHeroWorking.get(hero.id);
         const location = this.map
             .getHeroDamageForMap(hero)
-            .find(({ tile }) => tile.i == result?.tile.i && tile.j == result?.tile.j);
+            .find(
+                ({ tile }) =>
+                    tile.i == result?.tile.i && tile.j == result?.tile.j
+            );
 
         if (result && location && location.damage > 0) {
             return result;
@@ -323,7 +326,7 @@ export class TreasureMapBot {
                         (tile) => tile.i === option.i && tile.j === option.j
                     )
             );
-selected = items[0];
+            selected = items[0];
             //random
             //selected = items[Math.floor(Math.random() * items.length)];
         }
@@ -343,7 +346,7 @@ selected = items[0];
             Math.abs(location.i - entry.tile.i) +
             Math.abs(location.j - entry.tile.j);
 
-        const timedelta = (distance / hero.speed) * 1000 ;
+        const timedelta = (distance / hero.speed) * 1000;
         const elapsed = Date.now() - entry.timestamp;
 
         const bombs = this.heroBombs[hero.id]?.ids.length || 0;
@@ -410,10 +413,7 @@ selected = items[0];
             j: location.j,
         });
 
-
         this.removeBombHero(hero, bombId);
-
-
 
         if (!result) {
             return false;

@@ -682,7 +682,7 @@ export class Client {
     }
 
     private handleGetBlockMap(params: SFSObject) {
-        const data = params.getUtfString("datas");
+        const data = params.getUtfString("datas_pve");
         const blocks = JSON.parse(data) as IGetBlockMapPayload[];
         resolveUniquePromise(this.controller.getBlockMap, blocks);
         this.callHandler(this.handlers.getBlockMap, blocks);
