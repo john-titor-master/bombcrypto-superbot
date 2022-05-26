@@ -19,6 +19,7 @@ export type EGameAction =
     | "STOP_PVE"
     | "GET_ACTIVE_BOMBER"
     | "START_EXPLODE"
+    | "START_EXPLODE_V2"
     | "GO_SLEEP"
     | "GO_HOME"
     | "GO_WORK"

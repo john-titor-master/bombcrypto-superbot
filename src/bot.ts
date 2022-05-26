@@ -49,6 +49,7 @@ type HeroBombs = { lastId: number; ids: number[] };
 interface IMoreOptions {
     telegramKey?: string;
     forceExit?: boolean;
+    modeAmazon?: boolean;
     minHeroEnergyPercentage?: number;
 }
 
@@ -72,15 +73,18 @@ export class TreasureMapBot {
     private lastAdventure: number;
     private forceExit = true;
     private minHeroEnergyPercentage;
+    private modeAmazon = false;
 
     constructor(loginParams: ILoginParams, moreParams: IMoreOptions) {
         const {
             forceExit = true,
             minHeroEnergyPercentage = 90,
             telegramKey,
+            modeAmazon = false,
         } = moreParams;
 
-        this.client = new Client(loginParams, DEFAULT_TIMEOUT);
+        this.modeAmazon = modeAmazon;
+        this.client = new Client(loginParams, DEFAULT_TIMEOUT, modeAmazon);
         this.map = new TreasureMap({ blocks: [] });
         this.squad = new Squad({ heroes: [] });
         this.houses = [];
@@ -405,7 +409,8 @@ export class TreasureMapBot {
                 `bomb on (${location.i}, ${location.j})`
         );
         await sleep(3000);
-        const result = await this.client.startExplode({
+        const method = this.modeAmazon ? "startExplodeV2" : "startExplode";
+        const result = await this.client[method]({
             heroId: hero.id,
             bombId,
             blocks: [],
@@ -414,7 +419,6 @@ export class TreasureMapBot {
         });
 
         this.removeBombHero(hero, bombId);
-
         if (!result) {
             return false;
         }
@@ -523,7 +527,7 @@ export class TreasureMapBot {
             }
 
             logger.info("Opening map...");
-            await this.client.startPVE();
+            await this.client.startPVE(0, this.modeAmazon);
 
             if (this.workingSelection.length > 0) {
                 await this.placeBombs();
@@ -578,6 +582,10 @@ export class TreasureMapBot {
 
         this.client.on({
             event: "startExplode",
+            handler: this.handleExplosion.bind(this),
+        });
+        this.client.on({
+            event: "startExplodeV2",
             handler: this.handleExplosion.bind(this),
         });
 

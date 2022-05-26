@@ -45,10 +45,14 @@ export function makeSyncBombermanRequest(wallet: string, messageId: number) {
     return makeGameMessage(wallet, "SYNC_BOMBERMAN", messageId);
 }
 
-export function makeStartPVERequest(wallet: string, messageId: number) {
+export function makeStartPVERequest(
+    wallet: string,
+    messageId: number,
+    modeAmazon: boolean
+) {
     const data = new SFSObject();
     data.putUtfString("slogan", "gold_miner");
-    data.putInt("mode", 1);
+    data.putInt("mode", modeAmazon ? 3 : 1);
     return makeGameMessage(wallet, "START_PVE", messageId, data);
 }
 
@@ -129,6 +133,32 @@ export function makeStartExplodeRequest(
     data.putSFSArray("blocks", encodedBlocks);
 
     return makeGameMessage(wallet, "START_EXPLODE", messageId, data);
+}
+export function makeStartExplodeV2Request(
+    wallet: string,
+    messageId: number,
+    input: IStartExplodeInput
+) {
+    const data = new SFSObject();
+    const encodedBlocks = new SFSArray();
+
+    data.putLong("id", input.heroId);
+    data.putInt("num", input.bombId);
+    data.putInt("i", input.i);
+    data.putInt("j", input.j);
+
+    input.blocks.forEach((block) => {
+        const encodedBlock = new SFSObject();
+
+        encodedBlock.putInt("i", block.i);
+        encodedBlock.putInt("j", block.j);
+
+        encodedBlocks.addSFSObject(encodedBlock);
+    });
+
+    data.putSFSArray("blocks", encodedBlocks);
+
+    return makeGameMessage(wallet, "START_EXPLODE_V2", messageId, data);
 }
 
 export function makeGetStoryLevelDetail(wallet: string, messageId: number) {

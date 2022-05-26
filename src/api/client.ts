@@ -50,6 +50,7 @@ import {
     makeGoWorkRequest,
     makeLoginRequest,
     makeStartExplodeRequest,
+    makeStartExplodeV2Request,
     makeStartPVERequest,
     makeStopPVERequest,
     makeSyncBombermanRequest,
@@ -84,6 +85,7 @@ type EventHandlerMap = {
     startPVE: () => void;
     stopPVE: () => void;
     startExplode: (payload: IStartExplodePayload) => void;
+    startExplodeV2: (payload: IStartExplodePayload) => void;
     goSleep: (payload: IHeroUpdateParams) => void;
     goHome: (payload: IHeroUpdateParams) => void;
     goWork: (payload: IHeroUpdateParams) => void;
@@ -119,6 +121,7 @@ type IClientController = {
     startPVE: IUniqueRequestController<void>;
     stopPVE: IUniqueRequestController<void>;
     startExplode: ISerializedRequestController<IStartExplodePayload>;
+    startExplodeV2: ISerializedRequestController<IStartExplodePayload>;
     goSleep: ISerializedRequestController<IHeroUpdateParams>;
     goHome: ISerializedRequestController<IHeroUpdateParams>;
     getReward: IUniqueRequestController<IGetRewardPayload[]>;
@@ -137,8 +140,10 @@ export class Client {
     private sfs: SmartFox;
     private loginParams: ILoginParams;
     private apiBaseHeaders;
+    private modeAmazon = false;
 
-    constructor(loginParams: ILoginParams, timeout = 0) {
+    constructor(loginParams: ILoginParams, timeout = 0, modeAmazon = false) {
+        this.modeAmazon = modeAmazon;
         const userAgent = new UserAgent();
         this.apiBaseHeaders = {
             origin: "https://app.bombcrypto.io",
@@ -346,8 +351,24 @@ export class Client {
             timeout || this.timeout
         );
     }
+    startExplodeV2(input: IStartExplodeInput, timeout = 0) {
+        this.ensureLoggedIn();
 
-    startPVE(timeout = 0) {
+        return makeSerializedPromise(
+            this.controller.startExplodeV2,
+            () => {
+                const request = makeStartExplodeV2Request(
+                    this.walletId,
+                    this.nextId(),
+                    input
+                );
+                this.sfs.send(request);
+            },
+            timeout || this.timeout
+        );
+    }
+
+    startPVE(timeout = 0, modeAmazon: boolean) {
         this.ensureLoggedIn();
 
         return makeUniquePromise(
@@ -355,7 +376,8 @@ export class Client {
             () => {
                 const request = makeStartPVERequest(
                     this.walletId,
-                    this.nextId()
+                    this.nextId(),
+                    modeAmazon
                 );
                 this.sfs.send(request);
             },
@@ -530,6 +552,7 @@ export class Client {
             startPVE: [],
             stopPVE: [],
             startExplode: [],
+            startExplodeV2: [],
             goSleep: [],
             goHome: [],
             goWork: [],
@@ -576,6 +599,10 @@ export class Client {
                 current: undefined,
             },
             startExplode: {
+                current: undefined,
+                executors: [],
+            },
+            startExplodeV2: {
                 current: undefined,
                 executors: [],
             },
@@ -682,7 +709,9 @@ export class Client {
     }
 
     private handleGetBlockMap(params: SFSObject) {
-        const data = params.getUtfString("datas_pve");
+        const data = params.getUtfString(
+            this.modeAmazon ? "datas_pve_v2" : "datas_pve"
+        );
         const blocks = JSON.parse(data) as IGetBlockMapPayload[];
         resolveUniquePromise(this.controller.getBlockMap, blocks);
         this.callHandler(this.handlers.getBlockMap, blocks);
@@ -748,6 +777,29 @@ export class Client {
 
         resolveSerializedPromise(this.controller.startExplode, result);
         this.callHandler(this.handlers.startExplode, result);
+    }
+    private handleStartExplodeV2(params: SFSObject) {
+        const id = params.getLong("id");
+        const data = params.getSFSArray("blocks");
+        const blocks = Array(data.size())
+            .fill(null)
+            .map((_, i) => {
+                const payload = data.getSFSObject(i);
+                return {
+                    hp: payload.getInt("hp"),
+                    i: payload.getInt("i"),
+                    j: payload.getInt("j"),
+                };
+            });
+
+        const result = {
+            id: id,
+            energy: params.getInt("energy"),
+            blocks,
+        };
+
+        resolveSerializedPromise(this.controller.startExplodeV2, result);
+        this.callHandler(this.handlers.startExplodeV2, result);
     }
 
     private handleStartPVE() {
@@ -895,7 +947,6 @@ export class Client {
             "MessageError",
             `Failed with code ${errorCode}`
         );
-        console.log("errorrr", command);
 
         switch (command) {
             case "GET_BLOCK_MAP":
@@ -922,11 +973,13 @@ export class Client {
                     this.controller.startExplode as any,
                     undefined
                 );
-                console.log("START_EXPLODESTART_EXPLODESTART_EXPLODE");
-                // return rejectSerializedPromise(
-                //     this.controller.startExplode,
-                //     error
-                // );
+                break;
+            case "START_EXPLODE_V2":
+                resolveUniquePromise(
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    this.controller.startExplodeV2 as any,
+                    undefined
+                );
                 break;
 
             case "USER_LOGIN":
@@ -1048,6 +1101,9 @@ export class Client {
 
             case "START_EXPLODE":
                 return this.handleStartExplode(response.params);
+
+            case "START_EXPLODE_V2":
+                return this.handleStartExplodeV2(response.params);
 
             case "START_PVE":
                 return this.handleStartPVE();
