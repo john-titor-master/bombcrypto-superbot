@@ -1,8 +1,10 @@
 const REWARD_MAP = {
     BOMBERMAN: "Bomberman",
     BCOIN: "BCoin",
-    KEY: "Key",
     SENSPARK: "Senspark",
+    LUS: "Lus",
+    LUS_NFT: "Lus NFT",
+    KEY: "Key",
 } as const;
 
 export type ERewardType =
@@ -16,6 +18,10 @@ export function parseRewardType(reward: string): ERewardType {
 
     return isRewardKey(reward) ? REWARD_MAP[reward] : "Unknown";
 }
+
+export const isFloat = (n: number): boolean => {
+    return n.toString().split(".")[1] !== undefined;
+};
 
 export type IGetRewardPayload = {
     remainTime: number;

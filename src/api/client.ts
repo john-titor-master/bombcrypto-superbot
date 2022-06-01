@@ -7,9 +7,7 @@ import {
     SmartFox,
 } from "sfs2x-api";
 import got from "got";
-import UserAgent from 'user-agents';
-
-
+import UserAgent from "user-agents";
 import { HOST, PORT, ZONE } from "../constants";
 import { makeException } from "../err";
 import { askAndParseEnv, parseBoolean } from "../lib";
@@ -53,6 +51,7 @@ import {
     makeGoWorkRequest,
     makeLoginRequest,
     makeStartExplodeRequest,
+    makeStartExplodeV2Request,
     makeStartPVERequest,
     makeStopPVERequest,
     makeSyncBombermanRequest,
@@ -88,6 +87,7 @@ type EventHandlerMap = {
     startPVE: () => void;
     stopPVE: () => void;
     startExplode: (payload: IStartExplodePayload) => void;
+    startExplodeV2: (payload: IStartExplodePayload) => void;
     goSleep: (payload: IHeroUpdateParams) => void;
     goHome: (payload: IHeroUpdateParams) => void;
     goWork: (payload: IHeroUpdateParams) => void;
@@ -124,6 +124,7 @@ type IClientController = {
     claim: IUniqueRequestController<void>;
     stopPVE: IUniqueRequestController<void>;
     startExplode: ISerializedRequestController<IStartExplodePayload>;
+    startExplodeV2: ISerializedRequestController<IStartExplodePayload>;
     goSleep: ISerializedRequestController<IHeroUpdateParams>;
     goHome: ISerializedRequestController<IHeroUpdateParams>;
     getReward: IUniqueRequestController<IGetRewardPayload[]>;
@@ -134,20 +135,19 @@ type IClientController = {
     enterDoor: IUniqueRequestController<void>;
 };
 
+// const userAgent = new UserAgent();
 
-const userAgent = new UserAgent();
-
-const API_BASE_HEADERS = {
-    origin: "https://app.bombcrypto.io",
-    referer: "https://app.bombcrypto.io",
-    "sec-ch-ua": ` " Not A;Brand";v="99", "Chromium";v="98", "Google Chrome";v="98"`,
-    "sec-ch-ua-mobile": "?0",
-    "sec-ch-ua-platform": `"Windows"`,
-    "sec-fetch-dest": "empty",
-    "sec-fetch-mode": "cors",
-    "sec-fetch-site": "same-site",
-    "user-agent": userAgent.toString()
-};
+// const API_BASE_HEADERS = {
+//     origin: "https://app.bombcrypto.io",
+//     referer: "https://app.bombcrypto.io",
+//     "sec-ch-ua": ` " Not A;Brand";v="99", "Chromium";v="98", "Google Chrome";v="98"`,
+//     "sec-ch-ua-mobile": "?0",
+//     "sec-ch-ua-platform": `"Windows"`,
+//     "sec-fetch-dest": "empty",
+//     "sec-fetch-mode": "cors",
+//     "sec-fetch-site": "same-site",
+//     "user-agent": userAgent.toString()
+// };
 
 export class Client {
     private handlers!: IClientHandlers;
@@ -156,8 +156,23 @@ export class Client {
     private timeout: number;
     private sfs: SmartFox;
     private loginParams: ILoginParams;
+    private apiBaseHeaders;
+    private modeAmazon = false;
 
-    constructor(loginParams: ILoginParams, timeout = 0) {
+    constructor(loginParams: ILoginParams, timeout = 0, modeAmazon = false) {
+        this.modeAmazon = modeAmazon;
+        const userAgent = new UserAgent();
+        this.apiBaseHeaders = {
+            origin: "https://app.bombcrypto.io",
+            referer: "https://app.bombcrypto.io",
+            "sec-ch-ua": ` " Not A;Brand";v="99", "Chromium";v="98", "Google Chrome";v="98"`,
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": `"Windows"`,
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-site",
+            "user-agent": userAgent.toString(),
+        };
         this.sfs = new SmartFox({
             host: HOST,
             port: PORT,
@@ -205,11 +220,19 @@ export class Client {
     async disconnect(timeout = 0) {
         if (!this.isConnected) return;
 
-        return await makeUniquePromise(
+        const result = await makeUniquePromise(
             this.controller.disconnect,
             () => this.sfs.disconnect(),
             timeout || this.timeout
         );
+
+        return result;
+    }
+
+    async removeAllPromises() {
+        Object.values(this.controller).map((value) => {
+            value.current?.reject(new Error("Canceled"));
+        });
     }
 
     async login(timeout = 0) {
@@ -223,7 +246,7 @@ export class Client {
                     searchParams: {
                         address: this.loginParams.wallet,
                     },
-                    headers: API_BASE_HEADERS,
+                    headers: this.apiBaseHeaders,
                     http2: true,
                 })
                 .json<{ message: string }>();
@@ -231,7 +254,10 @@ export class Client {
             message = data.message;
         }
 
-        console.log("🚀 ~ file: client.ts ~ line 229 ~ Client ~ login ~ message", message)
+        console.log(
+            "🚀 ~ file: client.ts ~ line 229 ~ Client ~ login ~ message",
+            message
+        );
 
         await this.connect();
         return await makeUniquePromise(
@@ -347,8 +373,24 @@ export class Client {
             timeout || this.timeout
         );
     }
+    startExplodeV2(input: IStartExplodeInput, timeout = 0) {
+        this.ensureLoggedIn();
 
-    startPVE(timeout = 0) {
+        return makeSerializedPromise(
+            this.controller.startExplodeV2,
+            () => {
+                const request = makeStartExplodeV2Request(
+                    this.walletId,
+                    this.nextId(),
+                    input
+                );
+                this.sfs.send(request);
+            },
+            timeout || this.timeout
+        );
+    }
+
+    startPVE(timeout = 0, modeAmazon: boolean) {
         this.ensureLoggedIn();
 
         return makeUniquePromise(
@@ -356,7 +398,8 @@ export class Client {
             () => {
                 const request = makeStartPVERequest(
                     this.walletId,
-                    this.nextId()
+                    this.nextId(),
+                    modeAmazon
                 );
                 this.sfs.send(request);
             },
@@ -370,16 +413,12 @@ export class Client {
         return makeUniquePromise(
             this.controller.claim,
             () => {
-                const request = makeClaimRequest(
-                    this.walletId,
-                    this.nextId()
-                );
+                const request = makeClaimRequest(this.walletId, this.nextId());
                 this.sfs.send(request);
             },
             timeout || this.timeout
         );
     }
-
 
     stopPVE(timeout = 0) {
         this.ensureLoggedIn();
@@ -549,6 +588,7 @@ export class Client {
             startPVE: [],
             stopPVE: [],
             startExplode: [],
+            startExplodeV2: [],
             goSleep: [],
             goHome: [],
             goWork: [],
@@ -598,6 +638,10 @@ export class Client {
                 current: undefined,
             },
             startExplode: {
+                current: undefined,
+                executors: [],
+            },
+            startExplodeV2: {
                 current: undefined,
                 executors: [],
             },
@@ -704,7 +748,9 @@ export class Client {
     }
 
     private handleGetBlockMap(params: SFSObject) {
-        const data = params.getUtfString("datas");
+        const data = params.getUtfString(
+            this.modeAmazon ? "datas_pve_v2" : "datas_pve"
+        );
         const blocks = JSON.parse(data) as IGetBlockMapPayload[];
         resolveUniquePromise(this.controller.getBlockMap, blocks);
         this.callHandler(this.handlers.getBlockMap, blocks);
@@ -771,6 +817,29 @@ export class Client {
         resolveSerializedPromise(this.controller.startExplode, result);
         this.callHandler(this.handlers.startExplode, result);
     }
+    private handleStartExplodeV2(params: SFSObject) {
+        const id = params.getLong("id");
+        const data = params.getSFSArray("blocks");
+        const blocks = Array(data.size())
+            .fill(null)
+            .map((_, i) => {
+                const payload = data.getSFSObject(i);
+                return {
+                    hp: payload.getInt("hp"),
+                    i: payload.getInt("i"),
+                    j: payload.getInt("j"),
+                };
+            });
+
+        const result = {
+            id: id,
+            energy: params.getInt("energy"),
+            blocks,
+        };
+
+        resolveSerializedPromise(this.controller.startExplodeV2, result);
+        this.callHandler(this.handlers.startExplodeV2, result);
+    }
 
     private handleStartPVE() {
         resolveUniquePromise(this.controller.startPVE, undefined);
@@ -781,7 +850,6 @@ export class Client {
         resolveUniquePromise(this.controller.claim, undefined);
         this.callHandler(this.handlers.claim);
     }
-
 
     private handleStopPVE() {
         resolveUniquePromise(this.controller.stopPVE, undefined);
@@ -832,7 +900,10 @@ export class Client {
                     value: reward.getFloat("value"),
                 };
             });
-        console.log("🚀 ~ file: client.ts ~ line 806 ~ Client ~ handleGetReward ~ rewards", rewards)
+        console.log(
+            "🚀 ~ file: client.ts ~ line 806 ~ Client ~ handleGetReward ~ rewards",
+            rewards
+        );
 
         resolveUniquePromise(this.controller.getReward, rewards);
         this.callHandler(this.handlers.getReward, rewards);
@@ -945,10 +1016,19 @@ export class Client {
                 );
 
             case "START_EXPLODE":
-                return rejectSerializedPromise(
-                    this.controller.startExplode,
-                    error
+                resolveUniquePromise(
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    this.controller.startExplode as any,
+                    undefined
                 );
+                break;
+            case "START_EXPLODE_V2":
+                resolveUniquePromise(
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    this.controller.startExplodeV2 as any,
+                    undefined
+                );
+                break;
 
             case "USER_LOGIN":
                 return rejectUniquePromise(this.controller.login, error);
@@ -1072,6 +1152,9 @@ export class Client {
 
             case "START_EXPLODE":
                 return this.handleStartExplode(response.params);
+
+            case "START_EXPLODE_V2":
+                return this.handleStartExplodeV2(response.params);
 
             case "START_PVE":
                 return this.handleStartPVE();

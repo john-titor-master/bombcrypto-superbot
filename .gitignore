@@ -4,3 +4,5 @@ teste.txt
 .vscode/
 .env*
 .history
+package-lock.json
+docker-compose-local.yml
