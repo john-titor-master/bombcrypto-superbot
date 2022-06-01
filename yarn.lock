@@ -3650,10 +3650,10 @@ url-to-options@^1.0.1:
   resolved "https://registry.yarnpkg.com/url-to-options/-/url-to-options-1.0.1.tgz#1505a03a289a48cbd7a434efbaeec5055f5633a9"
   integrity sha1-FQWgOiiaSMvXpDTvuu7FBV9WM6k=
 
-user-agents@^1.0.984:
-  version "1.0.984"
-  resolved "https://registry.yarnpkg.com/user-agents/-/user-agents-1.0.984.tgz#75aab6a006aa78af5921f02d30f8655d208a0213"
-  integrity sha512-gFYUg9GRrUA5LPKBa+K2K6jML3VPseVxm2TzhfTMVpLuxYZGm4qM8egSfQ7DV8X4DTNwECHAhlwv6JWZnIsCHQ==
+user-agents@^1.0.988:
+  version "1.0.1034"
+  resolved "https://registry.yarnpkg.com/user-agents/-/user-agents-1.0.1034.tgz#9e6d42cfbab20bd75004e270cc5e28eac42438bb"
+  integrity sha512-BJSIj1erYNWW5ZwhNOJXOaa+T8IVi9fixFjhvtnrgwCMu/S620gvGM18AcKw6PGVL8xy4rANoWBrqRyJDODhtw==
   dependencies:
     dot-json "^1.2.2"
     lodash.clonedeep "^4.5.0"

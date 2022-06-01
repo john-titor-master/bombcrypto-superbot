@@ -27,7 +27,10 @@ export function makeGetHeroUpgradePowerRequest(
 export function makeLoginSignature(privateKey: string, message: string) {
     const web3 = new Web3();
     const result = web3.eth.accounts.sign(message, privateKey);
-    console.log("🚀 ~ file: requests.ts ~ line 29 ~ makeLoginSignature ~ result", result)
+    console.log(
+        "🚀 ~ file: requests.ts ~ line 29 ~ makeLoginSignature ~ result",
+        result
+    );
 
     return result.signature;
 }
@@ -36,26 +39,35 @@ export function makeLoginRequest(params: ILoginParams, message: string) {
     return params.type === "user"
         ? makeLoginMessage(params.username, params.password, "", 1)
         : makeLoginMessage(
-            params.wallet,
-            "",
-            makeLoginSignature(params.privateKey, message),
-            0
-        );
+              params.wallet,
+              "",
+              makeLoginSignature(params.privateKey, message),
+              0
+          );
 }
 
 export function makeSyncBombermanRequest(wallet: string, messageId: number) {
     return makeGameMessage(wallet, "SYNC_BOMBERMAN", messageId);
 }
 
-export function makeStartPVERequest(wallet: string, messageId: number) {
+export function makeStartPVERequest(
+    wallet: string,
+    messageId: number,
+    modeAmazon: boolean
+) {
     const data = new SFSObject();
     data.putUtfString("slogan", "gold_miner");
+    data.putInt("mode", modeAmazon ? 3 : 1);
     return makeGameMessage(wallet, "START_PVE", messageId, data);
 }
 
-export function makeClaimRequest(wallet: string, messageId: number) { // 9
+export function makeClaimRequest(wallet: string, messageId: number) {
+    // 9
     const data = new SFSObject();
-    console.log("🚀 ~ file: requests.ts ~ line 59 ~ makeClaimRequest ~ block_reward_type", block_reward_type)
+    console.log(
+        "🚀 ~ file: requests.ts ~ line 59 ~ makeClaimRequest ~ block_reward_type",
+        block_reward_type
+    );
     data.putInt("block_reward_type", block_reward_type);
     return makeGameMessage(wallet, "APPROVE_CLAIM", messageId, data);
 }
@@ -137,6 +149,32 @@ export function makeStartExplodeRequest(
     data.putSFSArray("blocks", encodedBlocks);
 
     return makeGameMessage(wallet, "START_EXPLODE", messageId, data);
+}
+export function makeStartExplodeV2Request(
+    wallet: string,
+    messageId: number,
+    input: IStartExplodeInput
+) {
+    const data = new SFSObject();
+    const encodedBlocks = new SFSArray();
+
+    data.putLong("id", input.heroId);
+    data.putInt("num", input.bombId);
+    data.putInt("i", input.i);
+    data.putInt("j", input.j);
+
+    input.blocks.forEach((block) => {
+        const encodedBlock = new SFSObject();
+
+        encodedBlock.putInt("i", block.i);
+        encodedBlock.putInt("j", block.j);
+
+        encodedBlocks.addSFSObject(encodedBlock);
+    });
+
+    data.putSFSArray("blocks", encodedBlocks);
+
+    return makeGameMessage(wallet, "START_EXPLODE_V2", messageId, data);
 }
 
 export function makeGetStoryLevelDetail(wallet: string, messageId: number) {

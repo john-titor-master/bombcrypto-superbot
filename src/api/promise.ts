@@ -39,6 +39,7 @@ export class ControlledPromise<T> {
                 timeout
             );
         } catch (error) {
+            this.clearTimeout();
             this.rejectFn(error);
         }
     }
@@ -56,7 +57,7 @@ export class ControlledPromise<T> {
         this.finished = true;
     }
 
-    private clearTimeout() {
+    public clearTimeout() {
         if (this.timeoutId) clearTimeout(this.timeoutId);
         this.timeoutId = undefined;
     }
