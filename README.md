@@ -9,8 +9,10 @@ This bot is a product of reverse engineering Bombcrypto game. It simulates the g
 
 It does the following:
 - Automatic farming on Treasure Hunt
-- Automatic Adventure mode (see usage section)
+- Automatic Amazon mode 
+- Automatic Adventure mode [deprecated]
 - Handles Home feature if a house is available
+- http server to show rewards & stats and to automatic claim rewards
 
 ## Installation
 
