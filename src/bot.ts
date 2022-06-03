@@ -137,8 +137,12 @@ export class TreasureMapBot {
     }
 
     public async getStatsAccount() {
-        const formatMsg = (hero: Hero) =>
-            `${hero.rarity} [${hero.id}]: ${hero.energy}/${hero.maxEnergy}`;
+        const formatMsg = (hero: Hero) => {
+            const shield = hero.shields?.length
+                ? `${hero.shields[0].current}/${hero.shields[0].total}`
+                : "empty shield";
+            return `${hero.rarity} [${hero.id}]: ${hero.energy}/${hero.maxEnergy} | ${shield}`;
+        };
 
         const workingHeroesLife = this.workingSelection
             .map(formatMsg)
@@ -150,6 +154,7 @@ export class TreasureMapBot {
         const message =
             `Map: ${this.map.toString()}\n` +
             `IDX: ${this.index}\n\n` +
+            `INFO: LIFE HERO | SHIELD HERO\n\n` +
             `Working heroes (${this.workingSelection.length}): \n${workingHeroesLife}\n\n` +
             `Resting heroes (${this.notWorkingSelection.length}): \n${notWorkingHeroesLife}`;
 

@@ -82,8 +82,15 @@ function parseHeroStats(genId: string): IHeroStats {
     };
 }
 
+export type IShield = {
+    current: number;
+    total: number;
+    ability: number;
+};
+
 export type IGetActiveBomberPayload = {
     stage: number;
+    shields?: IShield[];
     id: number;
     gen_id: string;
     energy: number;
@@ -96,6 +103,7 @@ export function parseGetActiveBomberPayload(
         id: payload["id"],
         state: parseHeroState(payload["stage"]),
         energy: payload["energy"],
+        shields: payload["shields"],
         active: true,
         ...parseHeroStats(payload["gen_id"]),
     };
@@ -110,14 +118,14 @@ export type ISyncBombermanPayload = {
     active: number;
 };
 
-export function parseSyncBombermanPayload(
-    payload: ISyncBombermanPayload
-): IHeroParams {
-    return {
-        id: payload["id"],
-        state: parseHeroState(payload["stage"]),
-        energy: payload["energy"] + payload["restore_hp"],
-        active: Boolean(payload["active"]),
-        ...parseHeroStats(payload["gen_id"]),
-    };
-}
+// export function parseSyncBombermanPayload(
+//     payload: ISyncBombermanPayload
+// ): IHeroParams {
+//     return {
+//         id: payload["id"],
+//         state: parseHeroState(payload["stage"]),
+//         energy: payload["energy"] + payload["restore_hp"],
+//         active: Boolean(payload["active"]),
+//         ...parseHeroStats(payload["gen_id"]),
+//     };
+// }
