@@ -25,7 +25,7 @@ With a bash window open:
 
 ```bash
 npm install -g yarn
-git clone https://github.com/john-titor-master/bombcrypto-superbot
+git clone https://github.com/lucasvieceli/bombcrypto-superbot
 cd bombcrypto-superbot
 yarn install
 ```
