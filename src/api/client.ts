@@ -782,7 +782,18 @@ export class Client {
             .fill(null)
             .map((_, i) => {
                 const payload = data.getSFSObject(i);
+                const dataShields = payload.getSFSArray("shields");
+                const shields = Array(dataShields.size());
+
                 return {
+                    shields: shields.fill(null).map((_, i) => {
+                        const shield = dataShields.getSFSObject(i);
+                        return {
+                            current: shield.getInt("current"),
+                            total: shield.getInt("total"),
+                            ability: shield.getInt("ability"),
+                        };
+                    }),
                     stage: payload.getInt("stage"),
                     id: payload.getLong("id"),
                     gen_id: payload.getUtfString("gen_id"),
