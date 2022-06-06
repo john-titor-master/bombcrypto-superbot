@@ -23,6 +23,23 @@ export type IStartExplodeInput = {
     }[];
 };
 
+export type IStartStoryExplodePayload = {
+    blocks: {
+        i: number;
+        j: number;
+    }[];
+    bombId: number;
+};
+export type IEnterDoorPayload = {
+    rewards: number;
+};
+export type IEnemyTakeDamagePayload = {
+    damage: number;
+    code: number;
+    hp: number;
+    id: number;
+};
+
 export function parseStartExplodePayload(
     payload: IStartExplodePayload
 ): [IMapBlockUpdateParams[], IHeroUpdateParams] {

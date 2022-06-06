@@ -1,4 +1,5 @@
 import { parseHeroRarity } from ".";
+import { IGetBlockMapPayload, IStoryHeroParams } from "../model";
 import {
     IStoryDetailsParams,
     IStoryPlayedHero,
@@ -41,6 +42,30 @@ export type IStoryDetailsPayload = {
     max_level: number;
     hero_id: number;
     played_bombers: IStoryPlayedBombersPayload[];
+};
+
+export type IEnemies = {
+    damage: number;
+    maxHp: number;
+    skin: number;
+    hp: number;
+    id: number;
+    follow: boolean;
+    bombSkin: number;
+    speed: number;
+    throughBrick: boolean;
+};
+
+export type IStoryMap = {
+    col: number;
+    door_x: number;
+    level: number;
+    positions: IGetBlockMapPayload[];
+    enemies: IEnemies[];
+    hero: IStoryHeroParams;
+    row: number;
+    door_y: number;
+    ec: number;
 };
 
 export function parseStoryDetailsPayload(
