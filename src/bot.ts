@@ -255,6 +255,7 @@ export class TreasureMapBot {
     }
 
     async logIn() {
+        if(this.client.isLoggedIn) return 
         logger.info("Logging in...");
         await this.client.login();
         logger.info("Logged in successfully");
