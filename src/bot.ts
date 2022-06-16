@@ -1,4 +1,3 @@
-import { info } from "console";
 import { Context, Telegraf } from "telegraf";
 import { Client } from "./api";
 import { getRandomArbitrary, sleep } from "./lib";
