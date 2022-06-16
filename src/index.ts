@@ -16,6 +16,7 @@ async function main() {
             askAndParseEnv("MIN_HERO_ENERGY_PERCENTAGE", identity, "50")
         ),
         modeAmazon: askAndParseEnv("MODE_AMAZON", parseBoolean, false),
+        modeAdventure: askAndParseEnv("MODE_ADVENTURE", parseBoolean, false),
     });
 
     process.once("SIGINT", async () => {

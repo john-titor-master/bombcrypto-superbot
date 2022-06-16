@@ -868,9 +868,29 @@ export class Client {
                 };
             });
 
+        const rawEnemies = params.getSFSArray("enemies");
+
+        const enemies = Array(rawEnemies.size())
+            .fill(null)
+            .map((_, i) => {
+                const enemy = rawEnemies.getSFSObject(i);
+
+                return {
+                    damage: enemy.getInt("damage"),
+                    maxHp: enemy.getFloat("maxHp"),
+                    skin: enemy.getInt("skin"),
+                    hp: enemy.getFloat("hp"),
+                    id: enemy.getInt("id"),
+                    follow: enemy.getBool("follow"),
+                    bombSkin: enemy.getInt("bombSkin"),
+                    speed: enemy.getFloat("speed"),
+                    throughBrick: enemy.getBool("throughBrick"),
+                } as IEnemies;
+            });
         const result = {
             bombId: params.getLong("bombId"),
             blocks,
+            enemies,
         };
 
         resolveSerializedPromise(this.controller.startStoryExplode, result);

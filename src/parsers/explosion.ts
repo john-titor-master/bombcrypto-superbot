@@ -1,4 +1,5 @@
 import { IHeroUpdateParams, IMapBlockUpdateParams } from "../model";
+import { IEnemies } from "./story";
 
 export type IStartExplodeBlocksPayload = {
     hp: number;
@@ -29,6 +30,7 @@ export type IStartStoryExplodePayload = {
         j: number;
     }[];
     bombId: number;
+    enemies: IEnemies[];
 };
 export type IEnterDoorPayload = {
     rewards: number;
