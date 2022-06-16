@@ -39,7 +39,7 @@ function parseHeroSkill(skill: number): EHeroSkill {
     return isSkillNumber(skill) ? HERO_SKILL_MAP[skill] : "Unknown";
 }
 
-function parseHeroStats(genId: string): IHeroStats {
+export function parseHeroStats(genId: string): IHeroStats {
     const GI_INDEX = 30;
     const GI_RARITY = 40;
     const GI_LEVEL = 45;
@@ -97,13 +97,13 @@ export type IGetActiveBomberPayload = {
 };
 
 export function parseGetActiveBomberPayload(
-    payload: IGetActiveBomberPayload
+    payload: IGetActiveBomberPayload | ISyncBombermanPayload
 ): IHeroParams {
     return {
         id: payload["id"],
         state: parseHeroState(payload["stage"]),
         energy: payload["energy"],
-        shields: payload["shields"],
+        shields: payload?.shields,
         active: true,
         ...parseHeroStats(payload["gen_id"]),
     };
@@ -113,6 +113,7 @@ export type ISyncBombermanPayload = {
     stage: number;
     id: number;
     gen_id: string;
+    shields?: IShield[] | undefined;
     energy: number;
     restore_hp: number;
     active: number;

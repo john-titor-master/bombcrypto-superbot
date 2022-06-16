@@ -22,9 +22,11 @@ import {
     isFloat,
     IStartExplodePayload,
     IStartStoryExplodePayload,
+    IStoryMap,
     ISyncBombermanPayload,
     parseGetActiveBomberPayload,
     parseGetBlockMapPayload,
+    parseHeroStats,
     parseStartExplodePayload,
     parseSyncHousePayload,
 } from "./parsers";
@@ -489,7 +491,16 @@ export class TreasureMapBot {
         const usedHeroes = details.played_bombers.map((hero) => hero.id);
         const hero = allHeroes.find((hero) => !usedHeroes.includes(hero.id));
 
-        return hero;
+        if (!hero) {
+            return null;
+        }
+        return buildHero({
+            id: hero.id,
+            energy: hero.energy,
+            active: true,
+            state: "Sleep",
+            ...parseHeroStats(hero.gen_id),
+        });
     }
 
     getBlockAdventure() {
@@ -500,19 +511,37 @@ export class TreasureMapBot {
         const items = this.adventureEnemies.filter((enemy) => enemy.hp > 0);
         return items[Math.floor(Math.random() * items.length)];
     }
+    getRandomPosition(hero: Hero, map: IStoryMap): { i: number; j: number } {
+        const i = Math.ceil(getRandomArbitrary(0, 28));
+        const j = Math.ceil(getRandomArbitrary(0, 10));
+
+        const doorI = map.door_x;
+        const doorJ = map.door_y;
+
+        if (
+            (doorI < i - hero.range || doorI > i + hero.range) &&
+            (doorJ < j - hero.range || doorJ > j + hero.range)
+        ) {
+            return { i, j };
+        }
+        return this.getRandomPosition(hero, map);
+    }
 
     async placebombAdventure(
-        hero: ISyncBombermanPayload,
+        hero: Hero,
         block: IGetBlockMapPayload | { i: number; j: number },
+        map: IStoryMap,
         enemy?: IEnemies
     ) {
-        const i = block ? block.i : Math.ceil(getRandomArbitrary(1, 10));
-        const j = block ? block.j : Math.ceil(getRandomArbitrary(1, 10));
-        logger.info(`${hero.id} will place bomb on (${i}, ${j})`);
+        const blockParse = block ? block : this.getRandomPosition(hero, map);
+
+        logger.info(
+            `${hero.id} will place bomb on (${blockParse.i}, ${blockParse.j})`
+        );
         const startExplode = this.client.startStoryExplode({
             heroId: hero.id,
-            i: i,
-            j: j,
+            i: blockParse.i,
+            j: blockParse.j,
             blocks: [],
             bombId: 0,
             isHero: true,
@@ -535,12 +564,12 @@ export class TreasureMapBot {
         return await startExplode;
     }
 
-    async placeBombsAdventure(hero: ISyncBombermanPayload) {
+    async placeBombsAdventure(hero: Hero, map: IStoryMap) {
         let enemy;
-        while ((enemy = this.getEnemyAdventure())) {
+        while ((enemy = this.getEnemyAdventure()) && this.shouldRun) {
             const block = this.getBlockAdventure();
 
-            await this.placebombAdventure(hero, block, enemy);
+            await this.placebombAdventure(hero, block, map, enemy);
 
             await sleep(getRandomArbitrary(4, 9) * 1000);
         }
@@ -566,7 +595,6 @@ export class TreasureMapBot {
 
         const details = await this.client.getStoryDetails();
         const hero = await this.getHeroAdventure(allHeroes);
-
         if (hero) {
             const level = Math.min(details.max_level + 1, 45);
 
@@ -577,22 +605,27 @@ export class TreasureMapBot {
             this.adventureEnemies = result.enemies;
             logger.info(`Total enemies: ${this.adventureEnemies.length}`);
 
-            await this.placeBombsAdventure(hero);
+            await this.placeBombsAdventure(hero, result);
             logger.info(
                 `Place bomb in door x:${result.door_x} y:${result.door_y}`
             );
-            await this.placebombAdventure(hero, {
-                i: result.door_x,
-                j: result.door_y,
-            }); //placebomb door
+            await this.placebombAdventure(
+                hero,
+                {
+                    i: result.door_x,
+                    j: result.door_y,
+                },
+                result
+            ); //placebomb door
 
             logger.info(
                 `total enemies after door: ${
                     this.adventureEnemies.filter((enemy) => enemy.hp > 0).length
                 }`
             );
-            await this.placeBombsAdventure(hero); //verifica se tem mais enimies
+            await this.placeBombsAdventure(hero, result); //verifica se tem mais enimies
 
+            if (!this.shouldRun) return false;
             logger.info(`Enter door adventure mode`);
             const resultDoor = await this.client.enterDoor();
 
@@ -607,6 +640,13 @@ export class TreasureMapBot {
         this.houses = payloads.map(parseSyncHousePayload).map(buildHouse);
     }
 
+    async sleepAllHeroes() {
+        logger.info("Sleep all heroes...");
+        for (const hero of this.workingSelection) {
+            await this.client.goSleep(hero.id);
+        }
+    }
+
     async loop() {
         this.shouldRun = true;
         await this.logIn();
@@ -618,17 +658,16 @@ export class TreasureMapBot {
             if (this.map.totalLife <= 0) await this.refreshMap();
             await this.refreshHeroSelection();
 
-            logger.info("Opening map...");
-            await this.client.startPVE(0, this.modeAmazon);
-
             if (this.workingSelection.length > 0) {
-                await this.placeBombs();
-            }
-            logger.info("Closing map...");
-            await this.client.stopPVE();
+                logger.info("Opening map...");
+                await this.client.startPVE(0, this.modeAmazon);
 
+                await this.placeBombs();
+                await this.sleepAllHeroes();
+                logger.info("Closing map...");
+                await this.client.stopPVE();
+            }
             logger.info("There are no heroes to work now.");
-            logger.info("Will sleep for 2 minutes");
 
             if (
                 (Date.now() > this.lastAdventure + 10 * 60 * 1000 ||
@@ -640,6 +679,7 @@ export class TreasureMapBot {
                 await this.adventure();
                 this.lastAdventure = Date.now();
             }
+            logger.info("Will sleep for 2 minutes");
             await sleep(120000);
         } while (this.shouldRun);
     }
