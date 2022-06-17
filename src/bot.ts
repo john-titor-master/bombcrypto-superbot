@@ -183,7 +183,6 @@ export class TreasureMapBot {
         }
 
         const message =
-            `Map: ${this.map.toString()}\n` +
             `Playing mode: ${this.getStatusPlaying()}\n` +
             `Adventure heroes: ${heroesAdventure.usedHeroes.length}/${heroesAdventure.allHeroes.length}\n` +
             msgEnemies +
