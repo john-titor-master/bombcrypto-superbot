@@ -84,6 +84,8 @@ export class TreasureMapBot {
     private modeAdventure = false;
     private adventureBlocks: IGetBlockMapPayload[] = [];
     private adventureEnemies: IEnemies[] = [];
+    private playing: "Adventure" | "Amazon" | "Treasure" | "sleep" | null =
+        null;
 
     constructor(loginParams: ILoginParams, moreParams: IMoreOptions) {
         const {
@@ -96,6 +98,7 @@ export class TreasureMapBot {
 
         this.modeAdventure = modeAdventure;
         this.modeAmazon = modeAmazon;
+        this.playing = null;
         this.client = new Client(loginParams, DEFAULT_TIMEOUT, modeAmazon);
         this.map = new TreasureMap({ blocks: [] });
         this.squad = new Squad({ heroes: [] });
@@ -148,6 +151,12 @@ export class TreasureMapBot {
         this.telegraf.launch();
     }
 
+    getStatusPlaying() {
+        if (this.playing === "sleep") return "sleep for 2 minutes";
+        if (this.playing === null) return "starting";
+        return this.playing;
+    }
+
     public async getStatsAccount() {
         const formatMsg = (hero: Hero) => {
             const shield = hero.shields?.length
@@ -155,6 +164,8 @@ export class TreasureMapBot {
                 : "empty shield";
             return `${hero.rarity} [${hero.id}]: ${hero.energy}/${hero.maxEnergy} | ${shield}`;
         };
+        const heroesAdventure = await this.getHeroesAdventure();
+        const blocks = this.map.blocks.length;
 
         const workingHeroesLife = this.workingSelection
             .map(formatMsg)
@@ -162,11 +173,23 @@ export class TreasureMapBot {
         const notWorkingHeroesLife = this.notWorkingSelection
             .map(formatMsg)
             .join("\n");
+        let msgEnemies = "";
+        if (this.playing === "Adventure") {
+            const enemies = this.adventureEnemies.filter(
+                (e) => e.hp > 0
+            ).length;
+            const AllEnemies = this.adventureEnemies.length;
+            msgEnemies = `Total enemies adventure: ${enemies}/${AllEnemies}\n`;
+        }
 
         const message =
             `Map: ${this.map.toString()}\n` +
-            `IDX: ${this.index}\n\n` +
-            `INFO: LIFE HERO | SHIELD HERO\n\n` +
+            `Playing mode: ${this.getStatusPlaying()}\n` +
+            `Adventure heroes: ${heroesAdventure.usedHeroes.length}/${heroesAdventure.allHeroes.length}\n` +
+            msgEnemies +
+            `${this.map.toString()}\n` +
+            `Remaining blocks (Treasure/Amazon): ${blocks}\n\n` +
+            `INFO: LIFE HERO | SHIELD HERO\n` +
             `Working heroes (${this.workingSelection.length}): \n${workingHeroesLife}\n\n` +
             `Resting heroes (${this.notWorkingSelection.length}): \n${notWorkingHeroesLife}`;
 
@@ -486,6 +509,20 @@ export class TreasureMapBot {
         await Promise.all(promises);
     }
 
+    async getHeroesAdventure() {
+        const [allHeroes, details] = await Promise.all([
+            this.client.syncBomberman(),
+            this.client.getStoryDetails(),
+        ]);
+
+        const usedHeroes = details.played_bombers.map((hero) => hero.id);
+
+        return {
+            allHeroes,
+            usedHeroes,
+        };
+    }
+
     async getHeroAdventure(allHeroes: ISyncBombermanPayload[]) {
         const details = await this.client.getStoryDetails();
         const usedHeroes = details.played_bombers.map((hero) => hero.id);
@@ -511,20 +548,50 @@ export class TreasureMapBot {
         const items = this.adventureEnemies.filter((enemy) => enemy.hp > 0);
         return items[Math.floor(Math.random() * items.length)];
     }
-    getRandomPosition(hero: Hero, map: IStoryMap): { i: number; j: number } {
+    getRandomPosition(
+        hero: Hero,
+        map: IStoryMap,
+        retry = 0
+    ): { i: number; j: number } {
+        retry = retry + 1;
         const i = Math.ceil(getRandomArbitrary(0, 28));
         const j = Math.ceil(getRandomArbitrary(0, 10));
 
         const doorI = map.door_x;
         const doorJ = map.door_y;
 
-        if (
-            (doorI < i - hero.range || doorI > i + hero.range) &&
-            (doorJ < j - hero.range || doorJ > j + hero.range)
-        ) {
+        const checkPosition = (i: number, j: number) => {
+            return (
+                (doorI < i - hero.range || doorI > i + hero.range) &&
+                (doorJ < j - hero.range || doorJ > j + hero.range)
+            );
+        };
+
+        if (checkPosition(i, j)) {
             return { i, j };
         }
-        return this.getRandomPosition(hero, map);
+
+        console.log("tentando dnv ", retry);
+        if (retry >= 100) {
+            console.log("chegou no 100");
+            const retryPositions = [
+                { i: 0, j: 0 },
+                { i: 0, j: 10 },
+                { i: 28, j: 0 },
+                { i: 28, j: 10 },
+            ];
+            for (const position of retryPositions) {
+                if (checkPosition(position.i, position.j)) {
+                    console.log("foi ", position);
+                    return position;
+                }
+            }
+
+            console.log("não foi nem ", { i, j });
+            return { i, j };
+        }
+
+        return this.getRandomPosition(hero, map, retry);
     }
 
     async placebombAdventure(
@@ -536,7 +603,7 @@ export class TreasureMapBot {
         const blockParse = block ? block : this.getRandomPosition(hero, map);
 
         logger.info(
-            `${hero.id} will place bomb on (${blockParse.i}, ${blockParse.j})`
+            `[${hero.rarity}] damage: ${hero.damage} ${hero.id} will place bomb on (${blockParse.i}, ${blockParse.j})`
         );
         const startExplode = this.client.startStoryExplode({
             heroId: hero.id,
@@ -660,6 +727,7 @@ export class TreasureMapBot {
 
             if (this.workingSelection.length > 0) {
                 logger.info("Opening map...");
+                this.playing = this.modeAmazon ? "Amazon" : "Treasure";
                 await this.client.startPVE(0, this.modeAmazon);
 
                 await this.placeBombs();
@@ -675,10 +743,12 @@ export class TreasureMapBot {
                 this.modeAdventure
             ) {
                 this.resetStateAdventure();
+                this.playing = "Adventure";
 
                 await this.adventure();
                 this.lastAdventure = Date.now();
             }
+            this.playing = "sleep";
             logger.info("Will sleep for 2 minutes");
             await sleep(120000);
         } while (this.shouldRun);
