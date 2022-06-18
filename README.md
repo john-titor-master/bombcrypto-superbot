@@ -1,4 +1,3 @@
-
 > :warning: **There are risks when using any kind of unofficial software**: Be very careful! If you lose your account, it is entirely your responsibility.
 
 # Bombcrypto-superbot
@@ -10,19 +9,20 @@ moderated by Lucas Vieceli
 ## Features
 
 It does the following:
-- Automatic farming on Treasure Hunt
-- Automatic Adventure mode (see usage section)
-- Automatic Amazon mode
-- Handles Home feature if a house is available
+
+-   Automatic farming on Treasure Hunt
+-   Automatic Adventure mode (see usage section)
+-   Automatic Amazon mode
+-   Handles Home feature if a house is available
 
 ## Installation
 
 You need the following packages installed for this bot to work:
 
-- https://git-scm.com/downloads
-- https://nodejs.org/en/download/ Version **16** at least.
+-   https://git-scm.com/downloads
+-   https://nodejs.org/en/download/ Version **16** at least.
 
-Open bash on a folder you want the project to be cloned. Windows users (*shame*) can open **Git Bash** right-clicking on the Desktop folder or any other folder.
+Open bash on a folder you want the project to be cloned. Windows users (_shame_) can open **Git Bash** right-clicking on the Desktop folder or any other folder.
 
 With a bash window open:
 
@@ -50,22 +50,24 @@ LOGIN=[login] TELEGRAM_KEY=[telegram_key] yarn go
 ```
 
 The envirement variables are explained below:
-- `[login]` (**required**): The login string should be written in of the the following formats:
-    - Login/Password mode: `user:[username]:[password]`. In this mode, you pass the `username` and the `password` registered for scholarship. The final string fould be like `LOGIN=user:username1:password1`.
-    - Wallet/PrivateKey mode (:warning: **Not recommended**. Do not share your private key with anyone.): `wallet:[walletId]:[privateKey]`. In this mode, you pass the `walletId` and the `privateKey` of your wallet in order to login with full access. This mode mimics the Metamask login process. This mode is here only for completeness.
-- `[telegram_key]` (optional): The key of a telegram bot. See Telegram integration section.
-- `[MODE_AMAZON]` (optional): if you want to play amazon mode.
-- `[MIN_HERO_ENERGY_PERCENTAGE]` (optional): Percentage that will put the heroes to work.
-- `[adventure]`: **Deprecated** for now.
+
+-   `[login]` (**required**): The login string should be written in of the the following formats:
+    -   Login/Password mode: `user:[username]:[password]`. In this mode, you pass the `username` and the `password` registered for scholarship. The final string fould be like `LOGIN=user:username1:password1`.
+    -   Wallet/PrivateKey mode (:warning: **Not recommended**. Do not share your private key with anyone.): `wallet:[walletId]:[privateKey]`. In this mode, you pass the `walletId` and the `privateKey` of your wallet in order to login with full access. This mode mimics the Metamask login process. This mode is here only for completeness.
+-   `[telegram_key]` (optional): The key of a telegram bot. See Telegram integration section.
+-   `[MODE_AMAZON]` (optional): if you want to play amazon mode.
+-   `[MODE_ADVENTURE]` (optional): if you want to play adventure mode.
+-   `[MIN_HERO_ENERGY_PERCENTAGE]` (optional): Percentage that will put the heroes to work.
 
 ## Telegram integration
 
 If you want to see the progress of the bot on your phone, you may create a telegram bot through BotFather (https://t.me/botfather). With the created key, pass the `TELEGRAM_KEY` enviroment variable when initializing the bot.
 
 Start a conversation with the created bot and send the following:
-- `/stats`: Brings information about the current map life, the amount of working heroes and the current hero selection identifier.
-- `/rewards`: Brings the current amount of coins, heroes to be claimed and keys you have in your account.
-- `/exit`: Will kill the bot.
+
+-   `/stats`: Brings information about the current map life, the amount of working heroes and the current hero selection identifier.
+-   `/rewards`: Brings the current amount of coins, heroes to be claimed and keys you have in your account.
+-   `/exit`: Will kill the bot.
 
 ## Resilience and multi-account
 
