@@ -34,7 +34,9 @@ export class Squad {
     }
 
     get notWorking() {
-        return this.activeHeroes.filter((hero) => hero.state !== "Work");
+        return this.activeHeroes.filter(
+            (hero) => hero.state !== "Work" || hero.energy === 0
+        );
     }
 
     update(params: ISquadParams) {

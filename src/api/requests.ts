@@ -1,12 +1,13 @@
 import { SFSArray, SFSObject } from "sfs2x-api";
 import Web3 from "web3";
+import { currentTimeSinceAD } from "../lib";
 import { IEnemyTakeDamageInput } from "../parsers";
 import {
     IStartExplodeInput,
     IStartStoryExplodeInput,
 } from "../parsers/explosion";
 import { ILoginParams } from "../parsers/login";
-import { makeGameMessage, makeLoginMessage } from "./base";
+import { hashGameMessage, makeGameMessage, makeLoginMessage } from "./base";
 
 export function makePingPongRequest(wallet: string, messageId: number) {
     return makeGameMessage(wallet, "PING_PONG", messageId);
@@ -45,9 +46,14 @@ export function makeSyncBombermanRequest(wallet: string, messageId: number) {
     return makeGameMessage(wallet, "SYNC_BOMBERMAN", messageId);
 }
 
-export function makeStartPVERequest(wallet: string, messageId: number) {
+export function makeStartPVERequest(
+    wallet: string,
+    messageId: number,
+    modeAmazon: boolean
+) {
     const data = new SFSObject();
     data.putUtfString("slogan", "gold_miner");
+    data.putInt("mode", modeAmazon ? 3 : 1);
     return makeGameMessage(wallet, "START_PVE", messageId, data);
 }
 
@@ -129,6 +135,32 @@ export function makeStartExplodeRequest(
 
     return makeGameMessage(wallet, "START_EXPLODE", messageId, data);
 }
+export function makeStartExplodeV2Request(
+    wallet: string,
+    messageId: number,
+    input: IStartExplodeInput
+) {
+    const data = new SFSObject();
+    const encodedBlocks = new SFSArray();
+
+    data.putLong("id", input.heroId);
+    data.putInt("num", input.bombId);
+    data.putInt("i", input.i);
+    data.putInt("j", input.j);
+
+    input.blocks.forEach((block) => {
+        const encodedBlock = new SFSObject();
+
+        encodedBlock.putInt("i", block.i);
+        encodedBlock.putInt("j", block.j);
+
+        encodedBlocks.addSFSObject(encodedBlock);
+    });
+
+    data.putSFSArray("blocks", encodedBlocks);
+
+    return makeGameMessage(wallet, "START_EXPLODE_V2", messageId, data);
+}
 
 export function makeGetStoryLevelDetail(wallet: string, messageId: number) {
     return makeGameMessage(wallet, "GET_STORY_LEVEL_DETAIL", messageId);
@@ -145,6 +177,7 @@ export function makeGetStoryMap(
     data.putInt("level", level);
     data.putLong("hero_id", heroId);
     data.putInt("ticket_type", 0);
+    data.putUtfString("slogan", "bomb_squad");
 
     return makeGameMessage(wallet, "GET_STORY_MAP", messageId, data);
 }
@@ -156,10 +189,12 @@ export function makeStartExplodeExplodeRequest(
 ) {
     const data = new SFSObject();
     const encodedBlocks = new SFSArray();
-
-    data.putLong("id", input.heroId);
+    const bombId = currentTimeSinceAD();
+    data.putInt("id", input.heroId);
     data.putBool("is_hero", input.isHero);
-    data.putInt("bombId", input.bombId);
+    data.putLong("bombId", bombId);
+    // data.putInt("i", input.i > 0 ? input.i - 1 : input.i);
+    // data.putInt("j", input.j > 0 ? input.j - 1 : input.j);
     data.putInt("i", input.i);
     data.putInt("j", input.j);
 
@@ -182,9 +217,15 @@ export function makeEnemyTakeDamageRequest(
     messageId: number,
     input: IEnemyTakeDamageInput
 ) {
+    let [, timestamp] = hashGameMessage(wallet, "ENEMY_TAKE_DAMAGE", messageId);
+
+    if (typeof timestamp == "string") {
+        timestamp = parseInt(timestamp);
+    }
+
     const data = new SFSObject();
 
-    data.putLong("timestamp", input.timestamp);
+    data.putLong("timestamp", timestamp);
     data.putLong("hero_id", input.heroId);
     data.putInt("enemy_id", input.enemyId);
 
@@ -192,5 +233,9 @@ export function makeEnemyTakeDamageRequest(
 }
 
 export function makeEnterDoorRequest(wallet: string, messageId: number) {
-    return makeGameMessage(wallet, "ENTER_DOOR", messageId);
+    const data = new SFSObject();
+
+    data.putUtfString("slogan", "card_game");
+
+    return makeGameMessage(wallet, "ENTER_DOOR", messageId, data);
 }

@@ -39,7 +39,7 @@ function parseHeroSkill(skill: number): EHeroSkill {
     return isSkillNumber(skill) ? HERO_SKILL_MAP[skill] : "Unknown";
 }
 
-function parseHeroStats(genId: string): IHeroStats {
+export function parseHeroStats(genId: string): IHeroStats {
     const GI_INDEX = 30;
     const GI_RARITY = 40;
     const GI_LEVEL = 45;
@@ -82,20 +82,28 @@ function parseHeroStats(genId: string): IHeroStats {
     };
 }
 
+export type IShield = {
+    current: number;
+    total: number;
+    ability: number;
+};
+
 export type IGetActiveBomberPayload = {
     stage: number;
+    shields?: IShield[];
     id: number;
     gen_id: string;
     energy: number;
 };
 
 export function parseGetActiveBomberPayload(
-    payload: IGetActiveBomberPayload
+    payload: IGetActiveBomberPayload | ISyncBombermanPayload
 ): IHeroParams {
     return {
         id: payload["id"],
         state: parseHeroState(payload["stage"]),
         energy: payload["energy"],
+        shields: payload?.shields,
         active: true,
         ...parseHeroStats(payload["gen_id"]),
     };
@@ -105,19 +113,20 @@ export type ISyncBombermanPayload = {
     stage: number;
     id: number;
     gen_id: string;
+    shields?: IShield[] | undefined;
     energy: number;
     restore_hp: number;
     active: number;
 };
 
-export function parseSyncBombermanPayload(
-    payload: ISyncBombermanPayload
-): IHeroParams {
-    return {
-        id: payload["id"],
-        state: parseHeroState(payload["stage"]),
-        energy: payload["energy"] + payload["restore_hp"],
-        active: Boolean(payload["active"]),
-        ...parseHeroStats(payload["gen_id"]),
-    };
-}
+// export function parseSyncBombermanPayload(
+//     payload: ISyncBombermanPayload
+// ): IHeroParams {
+//     return {
+//         id: payload["id"],
+//         state: parseHeroState(payload["stage"]),
+//         energy: payload["energy"] + payload["restore_hp"],
+//         active: Boolean(payload["active"]),
+//         ...parseHeroStats(payload["gen_id"]),
+//     };
+// }

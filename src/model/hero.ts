@@ -1,3 +1,5 @@
+import { IShield } from "../parsers";
+
 export const STATE_ARRAY = ["Work", "Sleep", "Home"] as const;
 
 export type EHeroState = typeof STATE_ARRAY[number] | "Unknown";
@@ -64,6 +66,7 @@ export type IHeroParams = IHeroStats & {
     state: EHeroState;
     energy: number;
     active: boolean;
+    shields?: IShield[];
 };
 
 export function buildHero(params: IHeroParams) {
@@ -83,6 +86,9 @@ export class Hero {
 
     get active() {
         return this.params.active;
+    }
+    get shields() {
+        return this.params.shields;
     }
 
     get energy() {
