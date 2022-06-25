@@ -58,6 +58,7 @@ The envirement variables are explained below:
 -   `[MODE_AMAZON]` (optional): if you want to play amazon mode.
 -   `[MODE_ADVENTURE]` (optional): if you want to play adventure mode.
 -   `[MIN_HERO_ENERGY_PERCENTAGE]` (optional): Percentage that will put the heroes to work.
+-   `[HOUSE_HEROES]` (optional): If you have a house, here you can inform the ids of the heroes will use the house, separated by ":", Example 151515881:51878184:16187755.
 
 ## Telegram integration
 

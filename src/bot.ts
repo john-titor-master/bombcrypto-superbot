@@ -58,6 +58,7 @@ interface IMoreOptions {
     modeAmazon?: boolean;
     modeAdventure?: boolean;
     minHeroEnergyPercentage?: number;
+    houseHeroes?: string;
 }
 
 const TELEGRAF_COMMANDS = ["rewards", "exit", "stats"] as const;
@@ -84,6 +85,7 @@ export class TreasureMapBot {
     private modeAdventure = false;
     private adventureBlocks: IGetBlockMapPayload[] = [];
     private adventureEnemies: IEnemies[] = [];
+    private houseHeroes: string[] = [];
     private playing: "Adventure" | "Amazon" | "Treasure" | "sleep" | null =
         null;
 
@@ -93,6 +95,7 @@ export class TreasureMapBot {
             minHeroEnergyPercentage = 90,
             telegramKey,
             modeAmazon = false,
+            houseHeroes = "",
             modeAdventure = false,
         } = moreParams;
 
@@ -104,6 +107,7 @@ export class TreasureMapBot {
         this.squad = new Squad({ heroes: [] });
         this.houses = [];
         this.forceExit = forceExit || true;
+        this.houseHeroes = houseHeroes.split(":");
         this.minHeroEnergyPercentage = minHeroEnergyPercentage;
 
         this.explosionByHero = new Map();
@@ -291,7 +295,12 @@ export class TreasureMapBot {
 
     async refreshHeroAtHome() {
         const homeSelection = this.squad.notWorking
-            .sort((a, b) => a.energy - b.energy)
+            .filter(
+                (hero) =>
+                    this.houseHeroes.includes(hero.id.toString()) ||
+                    this.houseHeroes.length == 0
+            )
+            .sort((a, b) => b.rarityIndex - a.rarityIndex)
             .slice(0, this.homeSlots);
 
         logger.info(`Will send heroes home (${this.homeSlots} slots)`);
@@ -570,9 +579,7 @@ export class TreasureMapBot {
             return { i, j };
         }
 
-        console.log("tentando dnv ", retry);
         if (retry >= 100) {
-            console.log("chegou no 100");
             const retryPositions = [
                 { i: 0, j: 0 },
                 { i: 0, j: 10 },
@@ -586,7 +593,6 @@ export class TreasureMapBot {
                 }
             }
 
-            console.log("não foi nem ", { i, j });
             return { i, j };
         }
 
