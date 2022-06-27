@@ -1,6 +1,6 @@
 import { Context, Telegraf } from "telegraf";
 import { Client } from "./api";
-import { askAndParseEnv, parseBoolean, sleep } from "./lib";
+import { getRandomArbitrary, sleep } from "./lib";
 import { logger } from "./logger";
 import {
     buildBlock,
@@ -16,11 +16,17 @@ import {
     TreasureMap,
 } from "./model";
 import {
+    IEnemies,
+    IEnemyTakeDamagePayload,
     IGetActiveBomberPayload,
     isFloat,
     IStartExplodePayload,
+    IStartStoryExplodePayload,
+    IStoryMap,
+    ISyncBombermanPayload,
     parseGetActiveBomberPayload,
     parseGetBlockMapPayload,
+    parseHeroStats,
     parseStartExplodePayload,
     parseSyncHousePayload,
 } from "./parsers";
@@ -28,7 +34,7 @@ import { ILoginParams } from "./parsers/login";
 
 const DEFAULT_TIMEOUT = 120000;
 const HISTORY_SIZE = 5;
-const ADVENTURE_ENABLED = false;
+const ADVENTURE_ENABLED = true;
 
 type ExplosionByHero = Map<
     number,
@@ -50,7 +56,9 @@ interface IMoreOptions {
     telegramKey?: string;
     forceExit?: boolean;
     modeAmazon?: boolean;
+    modeAdventure?: boolean;
     minHeroEnergyPercentage?: number;
+    houseHeroes?: string;
 }
 
 const TELEGRAF_COMMANDS = ["rewards", "exit", "stats"] as const;
@@ -74,6 +82,12 @@ export class TreasureMapBot {
     private forceExit = true;
     private minHeroEnergyPercentage;
     private modeAmazon = false;
+    private modeAdventure = false;
+    private adventureBlocks: IGetBlockMapPayload[] = [];
+    private adventureEnemies: IEnemies[] = [];
+    private houseHeroes: string[] = [];
+    private playing: "Adventure" | "Amazon" | "Treasure" | "sleep" | null =
+        null;
 
     constructor(loginParams: ILoginParams, moreParams: IMoreOptions) {
         const {
@@ -81,14 +95,19 @@ export class TreasureMapBot {
             minHeroEnergyPercentage = 90,
             telegramKey,
             modeAmazon = false,
+            houseHeroes = "",
+            modeAdventure = false,
         } = moreParams;
 
+        this.modeAdventure = modeAdventure;
         this.modeAmazon = modeAmazon;
+        this.playing = null;
         this.client = new Client(loginParams, DEFAULT_TIMEOUT, modeAmazon);
         this.map = new TreasureMap({ blocks: [] });
         this.squad = new Squad({ heroes: [] });
         this.houses = [];
         this.forceExit = forceExit || true;
+        this.houseHeroes = houseHeroes.split(":");
         this.minHeroEnergyPercentage = minHeroEnergyPercentage;
 
         this.explosionByHero = new Map();
@@ -181,7 +200,11 @@ export class TreasureMapBot {
         return {
             up: true,
         };
-    }
+        getStatusPlaying() {
+            if (this.playing === "sleep") return "sleep for 2 minutes";
+            if (this.playing === null) return "starting";
+            return this.playing;
+        }
 
     public async getStatsAccount() {
         const formatMsg = (hero: Hero) => {
@@ -190,6 +213,8 @@ export class TreasureMapBot {
                 : "empty shield";
             return `${hero.rarity} [${hero.id}]: ${hero.energy}/${hero.maxEnergy} | ${shield}`;
         };
+        const heroesAdventure = await this.getHeroesAdventure();
+        const blocks = this.map.blocks.length;
 
         const workingHeroesLife = this.workingSelection
             .map(formatMsg)
@@ -197,11 +222,22 @@ export class TreasureMapBot {
         const notWorkingHeroesLife = this.notWorkingSelection
             .map(formatMsg)
             .join("\n");
+        let msgEnemies = "";
+        if (this.playing === "Adventure") {
+            const enemies = this.adventureEnemies.filter(
+                (e) => e.hp > 0
+            ).length;
+            const AllEnemies = this.adventureEnemies.length;
+            msgEnemies = `Total enemies adventure: ${enemies}/${AllEnemies}\n`;
+        }
 
         const message =
-            `Map: ${this.map.toString()}\n` +
-            `IDX: ${this.index}\n\n` +
-            `INFO: LIFE HERO | SHIELD HERO\n\n` +
+            `Playing mode: ${this.getStatusPlaying()}\n` +
+            `Adventure heroes: ${heroesAdventure.usedHeroes.length}/${heroesAdventure.allHeroes.length}\n` +
+            msgEnemies +
+            `${this.map.toString()}\n` +
+            `Remaining blocks (Treasure/Amazon): ${blocks}\n\n` +
+            `INFO: LIFE HERO | SHIELD HERO\n` +
             `Working heroes (${this.workingSelection.length}): \n${workingHeroesLife}\n\n` +
             `Resting heroes (${this.notWorkingSelection.length}): \n${notWorkingHeroesLife}`;
 
@@ -220,10 +256,9 @@ export class TreasureMapBot {
                 rewards
                     .map(
                         (reward) =>
-                            `${reward.type}: ${
-                                isFloat(reward.value)
-                                    ? reward.value.toFixed(2)
-                                    : reward.value
+                            `${reward.type}: ${isFloat(reward.value)
+                                ? reward.value.toFixed(2)
+                                : reward.value
                             }`
                     )
                     .join("\n");
@@ -296,6 +331,7 @@ export class TreasureMapBot {
     }
 
     async logIn() {
+        if (this.client.isLoggedIn) return;
         logger.info("Logging in...");
         await this.client.login();
         logger.info("Logged in successfully");
@@ -303,7 +339,12 @@ export class TreasureMapBot {
 
     async refreshHeroAtHome() {
         const homeSelection = this.squad.notWorking
-            .sort((a, b) => a.energy - b.energy)
+            .filter(
+                (hero) =>
+                    this.houseHeroes.includes(hero.id.toString()) ||
+                    this.houseHeroes.length == 0
+            )
+            .sort((a, b) => b.rarityIndex - a.rarityIndex)
             .slice(0, this.homeSlots);
 
         logger.info(`Will send heroes home (${this.homeSlots} slots)`);
@@ -458,7 +499,7 @@ export class TreasureMapBot {
 
         logger.info(
             `${hero.rarity} ${hero.id} ${hero.energy}/${hero.maxEnergy} will place ` +
-                `bomb on (${location.i}, ${location.j})`
+            `bomb on (${location.i}, ${location.j})`
         );
         await sleep(3000);
         const method = this.modeAmazon ? "startExplodeV2" : "startExplode";
@@ -520,14 +561,142 @@ export class TreasureMapBot {
         await Promise.all(promises);
     }
 
-    async adventure() {
-        if (!ADVENTURE_ENABLED) {
-            logger.warn("Adventure mode is deprecated for now.");
-            return;
+    async getHeroesAdventure() {
+        const [allHeroes, details] = await Promise.all([
+            this.client.syncBomberman(),
+            this.client.getStoryDetails(),
+        ]);
+
+        const usedHeroes = details.played_bombers.map((hero) => hero.id);
+
+        return {
+            allHeroes,
+            usedHeroes,
+        };
+    }
+
+    async getHeroAdventure(allHeroes: ISyncBombermanPayload[]) {
+        const details = await this.client.getStoryDetails();
+        const usedHeroes = details.played_bombers.map((hero) => hero.id);
+        const hero = allHeroes.find((hero) => !usedHeroes.includes(hero.id));
+
+        if (!hero) {
+            return null;
+        }
+        return buildHero({
+            id: hero.id,
+            energy: hero.energy,
+            active: true,
+            state: "Sleep",
+            ...parseHeroStats(hero.gen_id),
+        });
+    }
+
+    getBlockAdventure() {
+        const items = this.adventureBlocks;
+        return items[Math.floor(Math.random() * items.length)];
+    }
+    getEnemyAdventure() {
+        const items = this.adventureEnemies.filter((enemy) => enemy.hp > 0);
+        return items[Math.floor(Math.random() * items.length)];
+    }
+    getRandomPosition(
+        hero: Hero,
+        map: IStoryMap,
+        retry = 0
+    ): { i: number; j: number } {
+        retry = retry + 1;
+        const i = Math.ceil(getRandomArbitrary(0, 28));
+        const j = Math.ceil(getRandomArbitrary(0, 10));
+
+        const doorI = map.door_x;
+        const doorJ = map.door_y;
+
+        const checkPosition = (i: number, j: number) => {
+            return (
+                (doorI < i - hero.range || doorI > i + hero.range) &&
+                (doorJ < j - hero.range || doorJ > j + hero.range)
+            );
+        };
+
+        if (checkPosition(i, j)) {
+            return { i, j };
         }
 
-        const shouldRun = askAndParseEnv("ADVENTURE", parseBoolean, false);
-        if (!shouldRun) return logger.info("Will not play adventure.");
+        if (retry >= 100) {
+            const retryPositions = [
+                { i: 0, j: 0 },
+                { i: 0, j: 10 },
+                { i: 28, j: 0 },
+                { i: 28, j: 10 },
+            ];
+            for (const position of retryPositions) {
+                if (checkPosition(position.i, position.j)) {
+                    console.log("foi ", position);
+                    return position;
+                }
+            }
+
+            return { i, j };
+        }
+
+        return this.getRandomPosition(hero, map, retry);
+    }
+
+    async placebombAdventure(
+        hero: Hero,
+        block: IGetBlockMapPayload | { i: number; j: number },
+        map: IStoryMap,
+        enemy?: IEnemies
+    ) {
+        const blockParse = block ? block : this.getRandomPosition(hero, map);
+
+        logger.info(
+            `[${hero.rarity}] damage: ${hero.damage} ${hero.id} will place bomb on (${blockParse.i}, ${blockParse.j})`
+        );
+        const startExplode = this.client.startStoryExplode({
+            heroId: hero.id,
+            i: blockParse.i,
+            j: blockParse.j,
+            blocks: [],
+            bombId: 0,
+            isHero: true,
+        });
+
+        if (enemy) {
+            const totalEnemies = this.adventureEnemies.filter(
+                (enemy) => enemy.hp > 0
+            );
+            logger.info(
+                `${hero.id} will place bomb in enemy ${enemy.id} ${enemy.hp}/${enemy.maxHp} totalEnemies ${totalEnemies.length}`
+            );
+            const enemyTakeDamage = this.client.enemyTakeDamage({
+                enemyId: enemy.id,
+                heroId: hero.id,
+            });
+            return await Promise.all([startExplode, enemyTakeDamage]);
+        }
+
+        return await startExplode;
+    }
+
+    async placeBombsAdventure(hero: Hero, map: IStoryMap) {
+        let enemy;
+        while ((enemy = this.getEnemyAdventure()) && this.shouldRun) {
+            const block = this.getBlockAdventure();
+
+            await this.placebombAdventure(hero, block, map, enemy);
+
+            await sleep(getRandomArbitrary(4, 9) * 1000);
+        }
+        return true;
+    }
+
+    async adventure() {
+        if (!ADVENTURE_ENABLED) return null;
+        const allHeroes = await this.client.syncBomberman();
+
+        if (allHeroes.length < 15) return null;
 
         const rewards = await this.client.getReward();
         const keys = rewards.filter((reward) => reward.type === "Key")[0];
@@ -538,27 +707,59 @@ export class TreasureMapBot {
             logger.info(`No keys to play right now.`);
             return;
         }
+        logger.info(`${keys.value} keys mode adventure`);
 
-        const amount = Math.floor(keys.value);
-
-        for (let i = 0; i < amount; i++) {
-            const details = await this.client.getStoryDetails();
-            const hero = this.squad.rarest;
+        const details = await this.client.getStoryDetails();
+        const hero = await this.getHeroAdventure(allHeroes);
+        if (hero) {
             const level = Math.min(details.max_level + 1, 45);
 
             logger.info(`Will play level ${level} with hero ${hero.id}`);
 
-            await this.client.getStoryMap(hero.id, level);
-            await sleep(5000);
-            await this.client.enterDoor();
+            const result = await this.client.getStoryMap(hero.id, level);
+            this.adventureBlocks = result.positions;
+            this.adventureEnemies = result.enemies;
+            logger.info(`Total enemies: ${this.adventureEnemies.length}`);
 
-            logger.info(`Finished Adventure mode`);
+            await this.placeBombsAdventure(hero, result);
+            logger.info(
+                `Place bomb in door x:${result.door_x} y:${result.door_y}`
+            );
+            await this.placebombAdventure(
+                hero,
+                {
+                    i: result.door_x,
+                    j: result.door_y,
+                },
+                result
+            ); //placebomb door
+
+            logger.info(
+                `total enemies after door: ${this.adventureEnemies.filter((enemy) => enemy.hp > 0).length
+                }`
+            );
+            await this.placeBombsAdventure(hero, result); //verifica se tem mais enimies
+
+            if (!this.shouldRun) return false;
+            logger.info(`Enter door adventure mode`);
+            const resultDoor = await this.client.enterDoor();
+
+            logger.info(`Finished Adventure mode ${resultDoor.rewards} Bcoin`);
+        } else {
+            logger.info(`No hero Adventure mode`);
         }
     }
 
     async loadHouses() {
         const payloads = await this.client.syncHouse();
         this.houses = payloads.map(parseSyncHousePayload).map(buildHouse);
+    }
+
+    async sleepAllHeroes() {
+        logger.info("Sleep all heroes...");
+        for (const hero of this.workingSelection) {
+            await this.client.goSleep(hero.id);
+        }
     }
 
     async loop() {
@@ -572,26 +773,32 @@ export class TreasureMapBot {
             if (this.map.totalLife <= 0) await this.refreshMap();
             await this.refreshHeroSelection();
 
-            if (Date.now() > this.lastAdventure + 10 * 60 * 1000) {
-                this.lastAdventure = Date.now();
-
-                await this.adventure();
-            }
-
-            logger.info("Opening map...");
-            await this.client.startPVE(0, this.modeAmazon);
-
             if (this.workingSelection.length > 0) {
-                await this.placeBombs();
-            } else {
-                logger.info("There are no heroes to work now.");
-                logger.info("Will sleep for 2 minutes");
-                await this.adventure();
-                await sleep(120000);
-            }
+                logger.info("Opening map...");
+                this.playing = this.modeAmazon ? "Amazon" : "Treasure";
+                await this.client.startPVE(0, this.modeAmazon);
 
-            logger.info("Closing map...");
-            await this.client.stopPVE();
+                await this.placeBombs();
+                await this.sleepAllHeroes();
+                logger.info("Closing map...");
+                await this.client.stopPVE();
+            }
+            logger.info("There are no heroes to work now.");
+
+            if (
+                (Date.now() > this.lastAdventure + 10 * 60 * 1000 ||
+                    this.lastAdventure === 0) &&
+                this.modeAdventure
+            ) {
+                this.resetStateAdventure();
+                this.playing = "Adventure";
+
+                await this.adventure();
+                this.lastAdventure = Date.now();
+            }
+            this.playing = "sleep";
+            logger.info("Will sleep for 2 minutes");
+            await sleep(120000);
         } while (this.shouldRun);
     }
 
@@ -602,6 +809,10 @@ export class TreasureMapBot {
         this.locationByHeroWorking = new Map();
         this.selection = [];
         this.index = 0;
+    }
+    private resetStateAdventure() {
+        this.adventureBlocks = [];
+        this.adventureEnemies = [];
     }
 
     reset() {
@@ -640,6 +851,14 @@ export class TreasureMapBot {
             event: "startExplodeV2",
             handler: this.handleExplosion.bind(this),
         });
+        this.client.on({
+            event: "startStoryExplode",
+            handler: this.handleStartStoryExplode.bind(this),
+        });
+        this.client.on({
+            event: "enemyTakeDamage",
+            handler: this.handleEnemyTakeDamage.bind(this),
+        });
 
         this.resetState();
     }
@@ -673,5 +892,38 @@ export class TreasureMapBot {
         const [mapParams, heroParams] = parseStartExplodePayload(payload);
         this.squad.updateHeroEnergy(heroParams);
         mapParams.forEach((params) => this.map.updateBlock(params));
+    }
+    private handleStartStoryExplode(payload: IStartStoryExplodePayload) {
+        if (payload.blocks.length) {
+            //remove blocks from this.adventureblocks
+            payload.blocks.forEach((block) => {
+                this.adventureBlocks = this.adventureBlocks.filter(
+                    (b) => b.i !== block.i || b.j !== block.j
+                );
+            });
+
+            // payload.blocks.forEach((block) => {
+            //     const blockExists = this.adventureBlocks.find(
+            //         (b) => block.i == b.i && block.j == b.j
+            //     );
+            //     if (blockExists) {
+            //         blockExists.hp = 0;
+            //     }
+            // });
+        }
+        if (payload.enemies && payload.enemies.length) {
+            logger.info(`add enemies ${payload.enemies.length}`);
+            payload.enemies.forEach((enemy) => {
+                this.adventureEnemies.push(enemy);
+            });
+        }
+    }
+    private handleEnemyTakeDamage(payload: IEnemyTakeDamagePayload) {
+        const enemy = this.adventureEnemies.find(
+            (enemy) => enemy.id == payload.id
+        );
+        if (enemy) {
+            enemy.hp = payload.hp;
+        }
     }
 }

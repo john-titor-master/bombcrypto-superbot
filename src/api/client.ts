@@ -1,3 +1,4 @@
+import got from "got";
 import {
     LoggerEvent,
     LogLevel,
@@ -6,24 +7,40 @@ import {
     SFSObject,
     SmartFox,
 } from "sfs2x-api";
-import got from "got";
 import UserAgent from "user-agents";
 import { HOST, PORT, ZONE } from "../constants";
 import { makeException } from "../err";
 import { askAndParseEnv, parseBoolean } from "../lib";
 import { logger } from "../logger";
-import { IGetBlockMapPayload, IHeroUpdateParams } from "../model";
-import { IStoryDetailsPayload, ISyncHousePayload } from "../parsers";
-import { IStartExplodeInput, IStartExplodePayload } from "../parsers/explosion";
+import {
+    IGetBlockMapPayload,
+    IHeroUpdateParams,
+    IStoryHeroParams,
+} from "../model";
+import {
+    IEnemies,
+    IEnemyTakeDamageInput,
+    IStoryDetailsPayload,
+    IStoryMap,
+    ISyncHousePayload,
+} from "../parsers";
+import {
+    IStartExplodeInput,
+    IStartExplodePayload,
+    IStartStoryExplodeInput,
+    IStartStoryExplodePayload,
+    IEnemyTakeDamagePayload,
+    IEnterDoorPayload,
+} from "../parsers/explosion";
 import {
     IGetActiveBomberPayload,
     ISyncBombermanPayload,
 } from "../parsers/hero";
 import { ILoginParams } from "../parsers/login";
 import {
+    ICoinDetailPayload,
     IGetRewardPayload,
     parseRewardType,
-    ICoinDetailPayload,
 } from "../parsers/reward";
 import { EGameAction } from "./base";
 import {
@@ -39,6 +56,7 @@ import {
 import {
     makeClaimRequest,
     makeCoinDetailRequest,
+    makeEnemyTakeDamageRequest,
     makeEnterDoorRequest,
     makeGetActiveBomberRequest,
     makeGetBlockMapRequest,
@@ -50,6 +68,7 @@ import {
     makeGoSleepRequest,
     makeGoWorkRequest,
     makeLoginRequest,
+    makeStartExplodeExplodeRequest,
     makeStartExplodeRequest,
     makeStartExplodeV2Request,
     makeStartPVERequest,
@@ -88,6 +107,8 @@ type EventHandlerMap = {
     stopPVE: () => void;
     startExplode: (payload: IStartExplodePayload) => void;
     startExplodeV2: (payload: IStartExplodePayload) => void;
+    startStoryExplode: (payload: IStartStoryExplodePayload) => void;
+    enemyTakeDamage: (payload: IEnemyTakeDamagePayload) => void;
     goSleep: (payload: IHeroUpdateParams) => void;
     goHome: (payload: IHeroUpdateParams) => void;
     goWork: (payload: IHeroUpdateParams) => void;
@@ -125,14 +146,18 @@ type IClientController = {
     stopPVE: IUniqueRequestController<void>;
     startExplode: ISerializedRequestController<IStartExplodePayload>;
     startExplodeV2: ISerializedRequestController<IStartExplodePayload>;
+    startStoryExplode: ISerializedRequestController<
+        IStartStoryExplodePayload | undefined
+    >;
+    enemyTakeDamage: ISerializedRequestController<IEnemyTakeDamagePayload>;
     goSleep: ISerializedRequestController<IHeroUpdateParams>;
     goHome: ISerializedRequestController<IHeroUpdateParams>;
     getReward: IUniqueRequestController<IGetRewardPayload[]>;
     coinDetail: IUniqueRequestController<ICoinDetailPayload>;
     goWork: ISerializedRequestController<IHeroUpdateParams>;
-    getStoryMap: IUniqueRequestController<void>;
+    getStoryMap: IUniqueRequestController<IStoryMap>;
     getStoryDetails: IUniqueRequestController<IStoryDetailsPayload>;
-    enterDoor: IUniqueRequestController<void>;
+    enterDoor: IUniqueRequestController<IEnterDoorPayload>;
 };
 
 // const userAgent = new UserAgent();
@@ -389,6 +414,38 @@ export class Client {
             timeout || this.timeout
         );
     }
+    startStoryExplode(input: IStartStoryExplodeInput, timeout = 0) {
+        this.ensureLoggedIn();
+
+        return makeSerializedPromise(
+            this.controller.startStoryExplode,
+            () => {
+                const request = makeStartExplodeExplodeRequest(
+                    this.walletId,
+                    this.nextId(),
+                    input
+                );
+                this.sfs.send(request);
+            },
+            timeout || this.timeout
+        );
+    }
+    enemyTakeDamage(input: IEnemyTakeDamageInput, timeout = 0) {
+        this.ensureLoggedIn();
+
+        return makeSerializedPromise(
+            this.controller.enemyTakeDamage,
+            () => {
+                const request = makeEnemyTakeDamageRequest(
+                    this.walletId,
+                    this.nextId(),
+                    input
+                );
+                this.sfs.send(request);
+            },
+            timeout || this.timeout
+        );
+    }
 
     startPVE(timeout = 0, modeAmazon: boolean) {
         this.ensureLoggedIn();
@@ -589,6 +646,8 @@ export class Client {
             stopPVE: [],
             startExplode: [],
             startExplodeV2: [],
+            startStoryExplode: [],
+            enemyTakeDamage: [],
             goSleep: [],
             goHome: [],
             goWork: [],
@@ -642,6 +701,14 @@ export class Client {
                 executors: [],
             },
             startExplodeV2: {
+                current: undefined,
+                executors: [],
+            },
+            startStoryExplode: {
+                current: undefined,
+                executors: [],
+            },
+            enemyTakeDamage: {
                 current: undefined,
                 executors: [],
             },
@@ -828,6 +895,57 @@ export class Client {
         resolveSerializedPromise(this.controller.startExplode, result);
         this.callHandler(this.handlers.startExplode, result);
     }
+    private handleStartStoryExplode(params: SFSObject) {
+        const data = params.getSFSArray("blocks");
+        const blocks = Array(data.size())
+            .fill(null)
+            .map((_, i) => {
+                const payload = data.getSFSObject(i);
+                return {
+                    i: payload.getInt("i"),
+                    j: payload.getInt("j"),
+                };
+            });
+
+        const rawEnemies = params.getSFSArray("enemies");
+
+        const enemies = Array(rawEnemies.size())
+            .fill(null)
+            .map((_, i) => {
+                const enemy = rawEnemies.getSFSObject(i);
+
+                return {
+                    damage: enemy.getInt("damage"),
+                    maxHp: enemy.getFloat("maxHp"),
+                    skin: enemy.getInt("skin"),
+                    hp: enemy.getFloat("hp"),
+                    id: enemy.getInt("id"),
+                    follow: enemy.getBool("follow"),
+                    bombSkin: enemy.getInt("bombSkin"),
+                    speed: enemy.getFloat("speed"),
+                    throughBrick: enemy.getBool("throughBrick"),
+                } as IEnemies;
+            });
+        const result = {
+            bombId: params.getLong("bombId"),
+            blocks,
+            enemies,
+        };
+
+        resolveSerializedPromise(this.controller.startStoryExplode, result);
+        this.callHandler(this.handlers.startStoryExplode, result);
+    }
+    private handleEnemyTakeDamage(params: SFSObject) {
+        const result = {
+            damage: params.getInt("damage"),
+            code: params.getInt("code"),
+            hp: params.getFloat("hp"),
+            id: params.getInt("id"),
+        };
+
+        resolveSerializedPromise(this.controller.enemyTakeDamage, result);
+        this.callHandler(this.handlers.enemyTakeDamage, result);
+    }
     private handleStartExplodeV2(params: SFSObject) {
         const id = params.getLong("id");
         const data = params.getSFSArray("blocks");
@@ -972,8 +1090,64 @@ export class Client {
         this.callHandler(this.handlers.getStoryDetails, result);
     }
 
-    private handleGetStoryMap() {
-        resolveUniquePromise(this.controller.getStoryMap, undefined);
+    private handleGetStoryMap(params: SFSObject) {
+        const positions = JSON.parse(
+            params.getUtfString("positions")
+        ) as IGetBlockMapPayload[];
+
+        const rawEnemies = params.getSFSArray("enemies");
+
+        const enemies = Array(rawEnemies.size())
+            .fill(null)
+            .map((_, i) => {
+                const enemy = rawEnemies.getSFSObject(i);
+
+                return {
+                    damage: enemy.getInt("damage"),
+                    maxHp: enemy.getFloat("maxHp"),
+                    skin: enemy.getInt("skin"),
+                    hp: enemy.getFloat("hp"),
+                    id: enemy.getInt("id"),
+                    follow: enemy.getBool("follow"),
+                    bombSkin: enemy.getInt("bombSkin"),
+                    speed: enemy.getFloat("speed"),
+                    throughBrick: enemy.getBool("throughBrick"),
+                } as IEnemies;
+            });
+
+        const rawHero = params.getSFSObject("hero");
+
+        const hero: IStoryHeroParams = {
+            maxHp: rawHero.getInt("maxHp"),
+            level: rawHero.getInt("level"),
+            stamina: rawHero.getInt("stamina"),
+            playercolor: rawHero.getInt("playercolor"),
+            active: rawHero.getInt("active"),
+            bombSkin: rawHero.getInt("bombSkin"),
+            speed: rawHero.getInt("speed"),
+            bombDamage: rawHero.getInt("bombDamage"),
+            genId: rawHero.getUtfString("genId"),
+            abilities: rawHero.getIntArray("abilities"),
+            bombRange: rawHero.getInt("bombRange"),
+            stage: rawHero.getInt("stage"),
+            playerType: rawHero.getInt("playerType"),
+            rare: rawHero.getInt("rare"),
+            bombNum: rawHero.getInt("bombNum"),
+            id: rawHero.getLong("id"),
+        };
+
+        const result: IStoryMap = {
+            positions,
+            enemies,
+            col: params.getInt("col"),
+            door_x: params.getInt("door_x"),
+            level: params.getInt("level"),
+            row: params.getInt("row"),
+            door_y: params.getInt("door_y"),
+            ec: params.getInt("ec"),
+            hero,
+        } as IStoryMap;
+        resolveUniquePromise(this.controller.getStoryMap, result);
         this.callHandler(this.handlers.getStoryMap);
     }
 
@@ -994,8 +1168,11 @@ export class Client {
         this.callHandler(this.handlers.syncHouse, houses);
     }
 
-    private handleEnterDoor() {
-        resolveUniquePromise(this.controller.enterDoor, undefined);
+    private handleEnterDoor(params: SFSObject) {
+        const result = {
+            rewards: params.getFloat("rewards"),
+        };
+        resolveUniquePromise(this.controller.enterDoor, result);
         this.callHandler(this.handlers.enterDoor);
     }
 
@@ -1037,6 +1214,21 @@ export class Client {
                 resolveUniquePromise(
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     this.controller.startExplodeV2 as any,
+                    undefined
+                );
+                break;
+            case "START_STORY_EXPLODE":
+                console.log("error START_STORY_EXPLODE", error);
+                resolveUniquePromise(
+                    this.controller.startStoryExplode,
+                    undefined
+                );
+                break;
+            case "ENEMY_TAKE_DAMAGE":
+                console.log("error ENEMY_TAKE_DAMAGE", error);
+                resolveUniquePromise(
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    this.controller.enemyTakeDamage as any,
                     undefined
                 );
                 break;
@@ -1146,7 +1338,10 @@ export class Client {
         const params = response.params;
 
         const ec = params.getInt("ec");
-        if (ec !== 0) return this.handleMessageError(response.cmd, ec);
+        params.containsKey("ec");
+        if (params.containsKey("ec") && ec !== 0) {
+            return this.handleMessageError(response.cmd, ec);
+        }
 
         switch (response.cmd) {
             case "GET_BLOCK_MAP":
@@ -1166,6 +1361,10 @@ export class Client {
 
             case "START_EXPLODE_V2":
                 return this.handleStartExplodeV2(response.params);
+            case "START_STORY_EXPLODE":
+                return this.handleStartStoryExplode(response.params);
+            case "ENEMY_TAKE_DAMAGE":
+                return this.handleEnemyTakeDamage(response.params);
 
             case "START_PVE":
                 return this.handleStartPVE();
@@ -1201,10 +1400,10 @@ export class Client {
                 return this.handleGetStoryDetails(response.params);
 
             case "GET_STORY_MAP":
-                return this.handleGetStoryMap();
+                return this.handleGetStoryMap(response.params);
 
             case "ENTER_DOOR":
-                return this.handleEnterDoor();
+                return this.handleEnterDoor(response.params);
         }
 
         console.warn("Unmapped command: ", response);

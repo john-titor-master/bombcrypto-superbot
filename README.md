@@ -1,27 +1,28 @@
-
 > :warning: **There are risks when using any kind of unofficial software**: Be very careful! If you lose your account, it is entirely your responsibility.
 
 # Bombcrypto-superbot
 
 This bot is a product of reverse engineering Bombcrypto game. It simulates the game and send messages using `websocket`. Since it does not require a browser to work, the main usage is for **multi-account**. Have fun!
 
+moderated by Lucas Vieceli
+
 ## Features
 
 It does the following:
-- Automatic farming on Treasure Hunt
-- Automatic Amazon mode 
-- Automatic Adventure mode [deprecated]
-- Handles Home feature if a house is available
-- http server to show rewards & stats and to automatic claim rewards
+
+-   Automatic farming on Treasure Hunt
+-   Automatic Adventure mode (see usage section)
+-   Automatic Amazon mode
+-   Handles Home feature if a house is available
 
 ## Installation
 
 You need the following packages installed for this bot to work:
 
-- https://git-scm.com/downloads
-- https://nodejs.org/en/download/ Version **16** at least.
+-   https://git-scm.com/downloads
+-   https://nodejs.org/en/download/ Version **16** at least.
 
-Open bash on a folder you want the project to be cloned. Windows users (*shame*) can open **Git Bash** right-clicking on the Desktop folder or any other folder.
+Open bash on a folder you want the project to be cloned. Windows users (_shame_) can open **Git Bash** right-clicking on the Desktop folder or any other folder.
 
 With a bash window open:
 
@@ -67,9 +68,10 @@ The envirement variables are explained below:
 If you want to see the progress of the bot on your phone, you may create a telegram bot through BotFather (https://t.me/botfather). With the created key, pass the `TELEGRAM_KEY` enviroment variable when initializing the bot.
 
 Start a conversation with the created bot and send the following:
-- `/stats`: Brings information about the current map life, the amount of working heroes and the current hero selection identifier.
-- `/rewards`: Brings the current amount of coins, heroes to be claimed and keys you have in your account.
-- `/exit`: Will kill the bot.
+
+-   `/stats`: Brings information about the current map life, the amount of working heroes and the current hero selection identifier.
+-   `/rewards`: Brings the current amount of coins, heroes to be claimed and keys you have in your account.
+-   `/exit`: Will kill the bot.
 
 ## Resilience and multi-account
 
