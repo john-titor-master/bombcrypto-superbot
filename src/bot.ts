@@ -177,7 +177,7 @@ export class TreasureMapBot {
         const notWorkingHeroesLife = this.notWorkingSelection
             .map(formatMsg)
             .join("\n");
-        let msgEnemies = "";
+        let msgEnemies = "\n";
         if (this.playing === "Adventure") {
             const enemies = this.adventureEnemies.filter(
                 (e) => e.hp > 0
@@ -193,7 +193,7 @@ export class TreasureMapBot {
             .join(",");
 
         const message =
-            `Playing mode: ${this.getStatusPlaying()}\n\N` +
+            `Playing mode: ${this.getStatusPlaying()}\n\n` +
             `Adventure: \n` +
             `Adventure heroes: ${heroesAdventure.usedHeroes.length}/${heroesAdventure.allHeroes.length}\n` +
             msgEnemies +
