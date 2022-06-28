@@ -199,7 +199,7 @@ export class TreasureMapBot {
             msgEnemies +
             `Treasure/Amazon:\n` +
             `${this.map.toString()}\n` +
-            `Heroes selected for house: ${houseHeroesIds}\n` +
+            `Heroes selected for home: ${houseHeroesIds}\n` +
             `Heroes at home: ${heroesAtHome}\n` +
             `Remaining chest (Treasure/Amazon): ${blocks}\n\n` +
             `INFO: LIFE HERO | SHIELD HERO\n` +
