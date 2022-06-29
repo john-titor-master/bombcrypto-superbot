@@ -1,20 +1,17 @@
 version: "3.4"
 
 services:
-  bomb1:
-    build: .
-    restart: always
-    working_dir: "/bombcrypto-superbot"
-    environment:
-      LOGIN: "MUDAR"
-      TELEGRAM_KEY: "MUDAR"
-  bomb2:
-    build: .
-    restart: always
-    working_dir: "/bombcrypto-superbot"
-    environment:
-      LOGIN: "MUDAR"
-      TELEGRAM_KEY: "MUDAR"
-
-
-
+    bomb1:
+        image: vieceli/bombcrypto-superbot:latest
+        restart: always
+        working_dir: "/bombcrypto-superbot"
+        environment:
+            LOGIN: "CHANGE"
+            TELEGRAM_KEY: "CHANGE"
+    bomb2:
+        image: vieceli/bombcrypto-superbot:latest
+        restart: always
+        working_dir: "/bombcrypto-superbot"
+        environment:
+            LOGIN: "CHANGE"
+            TELEGRAM_KEY: "CHANGE"

@@ -82,12 +82,6 @@ If you want the bot to never stop running for any exception (sometime the server
 
 Install Docker: https://docs.docker.com/desktop/
 
-Open a bash terminal on the project folder:
-
-```bash
-docker build . -t bsb
-```
-
 > This should be done whenever the projects gets updated.
 
 Now, create a `.env` file with the enviroment variables from the initialization, like:
@@ -102,13 +96,13 @@ Fill the values after the `=` (equal) sign. Leave `TELEGRAM_KEY` empty if you do
 To run the bot in **interactive mode**:
 
 ```bash
-docker run --env-file=.env --name bsb1 -it bsb
+docker run --env-file=.env --name bsb1 -it vieceli/bombcrypto-superbot
 ```
 
 In interactive mode, you will see the logs just as usual. But you may want it to keep running if something fails, you must run it in **detached mode** then:
 
 ```bash
-docker run --env-file=.env --restart=always --name bsb1 -dt bsb
+docker run --env-file=.env --restart=always --name bsb1 -dt vieceli/bombcrypto-superbot
 ```
 
 The `--restart=always` option will restart the bot if some error occurs. No output will be seen on this approach. if you want to see the logs:
@@ -142,14 +136,14 @@ version: "3.4"
 
 services:
   bomb1:
-    build: .
+    image: vieceli/bombcrypto-superbot:latest
     restart: always
     working_dir: "/bombcrypto-superbot"
     environment:
       LOGIN: "MUDAR"
       TELEGRAM_KEY: "MUDAR"
   bomb2:
-    build: .
+    image: vieceli/bombcrypto-superbot:latest
     restart: always
     working_dir: "/bombcrypto-superbot"
     environment:
