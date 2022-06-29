@@ -155,11 +155,56 @@ export class TreasureMapBot {
         this.telegraf.launch();
     }
 
-    getStatusPlaying() {
-        if (this.playing === "sleep") return "sleep for 2 minutes";
-        if (this.playing === null) return "starting";
-        return this.playing;
+    async getRewards() {
+        if (this.client.isConnected) {
+            const results: { [key: string]: number } = {};
+            const rewards = await this.client.getReward();
+            const detail = await this.client.coinDetail();
+
+            const bombers = await this.client.syncBomberman();
+
+            rewards.map((reward) => (results[`${reward.type}`] = reward.value));
+
+            return {
+                ...results,
+                detail,
+                bombers,
+                active: {
+                    heroCount: this.squad.heroes.length,
+                    heros: this.squad.heroes,
+                },
+            };
+        }
+
+        return null;
     }
+
+    async claim() {
+        if (this.client.isConnected) {
+            const res = await this.client.claim();
+            return res;
+        }
+
+        return null;
+    }
+
+    async getStats() {
+        return {
+            workingHeroes: this.workingSelection.length,
+            map: this.map.toString(),
+            idx: this.index,
+        };
+    }
+
+    async getConfig() {
+        return {
+            up: true,
+        };
+        getStatusPlaying() {
+            if (this.playing === "sleep") return "sleep for 2 minutes";
+            if (this.playing === null) return "starting";
+            return this.playing;
+        }
 
     public async getStatsAccount() {
         const formatMsg = (hero: Hero) => {
@@ -221,10 +266,9 @@ export class TreasureMapBot {
                 rewards
                     .map(
                         (reward) =>
-                            `${reward.type}: ${
-                                isFloat(reward.value)
-                                    ? reward.value.toFixed(2)
-                                    : reward.value
+                            `${reward.type}: ${isFloat(reward.value)
+                                ? reward.value.toFixed(2)
+                                : reward.value
                             }`
                     )
                     .join("\n");
@@ -465,7 +509,7 @@ export class TreasureMapBot {
 
         logger.info(
             `${hero.rarity} ${hero.id} ${hero.energy}/${hero.maxEnergy} will place ` +
-                `bomb on (${location.i}, ${location.j})`
+            `bomb on (${location.i}, ${location.j})`
         );
         await sleep(3000);
         const method = this.modeAmazon ? "startExplodeV2" : "startExplode";
@@ -701,8 +745,7 @@ export class TreasureMapBot {
             ); //placebomb door
 
             logger.info(
-                `total enemies after door: ${
-                    this.adventureEnemies.filter((enemy) => enemy.hp > 0).length
+                `total enemies after door: ${this.adventureEnemies.filter((enemy) => enemy.hp > 0).length
                 }`
             );
             await this.placeBombsAdventure(hero, result); //verifica se tem mais enimies

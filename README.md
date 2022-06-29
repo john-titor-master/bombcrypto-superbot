@@ -56,6 +56,12 @@ The envirement variables are explained below:
     -   Wallet/PrivateKey mode (:warning: **Not recommended**. Do not share your private key with anyone.): `wallet:[walletId]:[privateKey]`. In this mode, you pass the `walletId` and the `privateKey` of your wallet in order to login with full access. This mode mimics the Metamask login process. This mode is here only for completeness.
 -   `[telegram_key]` (optional): The key of a telegram bot. See Telegram integration section.
 -   `[MODE_AMAZON]` (optional): if you want to play amazon mode.
+-   `[PORT]` (required): to spin up the http server with
+-   -   GET /rewards
+-   -   GET /stats
+-   -   GET /claim/bcoin
+-   -   GET /claim/sen
+-   `[MIN_HERO_ENERGY_PERCENTAGE]` (optional): Percentage that will put the heroes to work.
 -   `[MODE_ADVENTURE]` (optional): if you want to play adventure mode.
 -   `[MIN_HERO_ENERGY_PERCENTAGE]` (optional): Percentage that will put the heroes to work.
 -   `[HOUSE_HEROES]` (optional): If you have a house, here you can inform the ids of the heroes will use the house, separated by ":", Example 151515881:51878184:16187755.

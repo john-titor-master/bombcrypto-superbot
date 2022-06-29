@@ -4,6 +4,7 @@
   "main": "src/index.ts",
   "license": "MIT",
   "devDependencies": {
+    "@types/express": "^4.17.13",
     "@types/node": "^17.0.1",
     "@types/user-agents": "^1.0.2",
     "@types/ws": "^8.2.2",
@@ -24,6 +25,8 @@
     "re": "yarn build && yarn re:run"
   },
   "dependencies": {
+    "@types/user-agents": "^1.0.2",
+    "express": "^4.17.3",
     "got": "~11.8.3",
     "sfs2x-api": "1.7.15",
     "telegraf": "^4.6.0",

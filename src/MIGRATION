@@ -1,0 +1,31 @@
+CREATE TABLE "Bomber" (
+    id serial PRIMARY KEY,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    account_id integer REFERENCES "BombCryptoBotUpdate" (id) ON DELETE CASCADE,
+    energy float,
+    active boolean,
+    index INTEGER,
+    rarity text,
+    rarityIndex integer,
+    level INTEGER,
+    variant integer,
+    skin text,
+    stamina integer,
+    speed integer,
+    bombSkin integer,
+    skillCount integer,
+    strength integer,
+    range INTEGER,
+    capacity integer,
+);
+
+ALTER TABLE "BombCryptoBotUpdate"
+    ADD COLUMN mined float;
+
+ALTER TABLE "BombCryptoBotUpdate"
+    ADD COLUMN invested float;
+
+ALTER TABLE "BombCryptoBotUpdate"
+    ADD COLUMN rewards float;
+
