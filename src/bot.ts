@@ -222,21 +222,31 @@ export class TreasureMapBot {
         const notWorkingHeroesLife = this.notWorkingSelection
             .map(formatMsg)
             .join("\n");
-        let msgEnemies = "";
+        let msgEnemies = "\n";
         if (this.playing === "Adventure") {
             const enemies = this.adventureEnemies.filter(
                 (e) => e.hp > 0
             ).length;
             const AllEnemies = this.adventureEnemies.length;
-            msgEnemies = `Total enemies adventure: ${enemies}/${AllEnemies}\n`;
+            msgEnemies = `Total enemies adventure: ${enemies}/${AllEnemies}\n\n`;
         }
 
+        const houseHeroesIds = this.houseHeroes.join(",");
+        const heroesAtHome = this.squad
+            .byState("Home")
+            .map((hero) => hero.id)
+            .join(",");
+
         const message =
-            `Playing mode: ${this.getStatusPlaying()}\n` +
+            `Playing mode: ${this.getStatusPlaying()}\n\n` +
+            `Adventure: \n` +
             `Adventure heroes: ${heroesAdventure.usedHeroes.length}/${heroesAdventure.allHeroes.length}\n` +
             msgEnemies +
+            `Treasure/Amazon:\n` +
             `${this.map.toString()}\n` +
-            `Remaining blocks (Treasure/Amazon): ${blocks}\n\n` +
+            `Heroes selected for home: ${houseHeroesIds}\n` +
+            `Heroes at home: ${heroesAtHome}\n` +
+            `Remaining chest (Treasure/Amazon): ${blocks}\n\n` +
             `INFO: LIFE HERO | SHIELD HERO\n` +
             `Working heroes (${this.workingSelection.length}): \n${workingHeroesLife}\n\n` +
             `Resting heroes (${this.notWorkingSelection.length}): \n${notWorkingHeroesLife}`;
