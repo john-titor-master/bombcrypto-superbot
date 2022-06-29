@@ -16,6 +16,7 @@ import {
     TreasureMap,
 } from "./model";
 import {
+    IClaimType,
     IEnemies,
     IEnemyTakeDamagePayload,
     IGetActiveBomberPayload,
@@ -179,9 +180,9 @@ export class TreasureMapBot {
         return null;
     }
 
-    async claim() {
+    async claim(blockRewardType: IClaimType) {
         if (this.client.isConnected) {
-            const res = await this.client.claim();
+            const res = await this.client.claim(blockRewardType);
             return res;
         }
 
@@ -200,11 +201,12 @@ export class TreasureMapBot {
         return {
             up: true,
         };
-        getStatusPlaying() {
-            if (this.playing === "sleep") return "sleep for 2 minutes";
-            if (this.playing === null) return "starting";
-            return this.playing;
-        }
+    }
+    getStatusPlaying() {
+        if (this.playing === "sleep") return "sleep for 2 minutes";
+        if (this.playing === null) return "starting";
+        return this.playing;
+    }
 
     public async getStatsAccount() {
         const formatMsg = (hero: Hero) => {
@@ -266,9 +268,10 @@ export class TreasureMapBot {
                 rewards
                     .map(
                         (reward) =>
-                            `${reward.type}: ${isFloat(reward.value)
-                                ? reward.value.toFixed(2)
-                                : reward.value
+                            `${reward.type}: ${
+                                isFloat(reward.value)
+                                    ? reward.value.toFixed(2)
+                                    : reward.value
                             }`
                     )
                     .join("\n");
@@ -509,7 +512,7 @@ export class TreasureMapBot {
 
         logger.info(
             `${hero.rarity} ${hero.id} ${hero.energy}/${hero.maxEnergy} will place ` +
-            `bomb on (${location.i}, ${location.j})`
+                `bomb on (${location.i}, ${location.j})`
         );
         await sleep(3000);
         const method = this.modeAmazon ? "startExplodeV2" : "startExplode";
@@ -745,7 +748,8 @@ export class TreasureMapBot {
             ); //placebomb door
 
             logger.info(
-                `total enemies after door: ${this.adventureEnemies.filter((enemy) => enemy.hp > 0).length
+                `total enemies after door: ${
+                    this.adventureEnemies.filter((enemy) => enemy.hp > 0).length
                 }`
             );
             await this.placeBombsAdventure(hero, result); //verifica se tem mais enimies

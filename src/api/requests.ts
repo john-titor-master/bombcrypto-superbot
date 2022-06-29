@@ -1,8 +1,7 @@
 import { SFSArray, SFSObject } from "sfs2x-api";
 import Web3 from "web3";
-import { block_reward_type } from "..";
 import { currentTimeSinceAD } from "../lib";
-import { IEnemyTakeDamageInput } from "../parsers";
+import { IClaimType, IEnemyTakeDamageInput } from "../parsers";
 import {
     IStartExplodeInput,
     IStartStoryExplodeInput,
@@ -36,11 +35,11 @@ export function makeLoginRequest(params: ILoginParams, message: string) {
     return params.type === "user"
         ? makeLoginMessage(params.username, params.password, "", 1)
         : makeLoginMessage(
-            params.wallet,
-            "",
-            makeLoginSignature(params.privateKey, message),
-            0
-        );
+              params.wallet,
+              "",
+              makeLoginSignature(params.privateKey, message),
+              0
+          );
 }
 
 export function makeSyncBombermanRequest(wallet: string, messageId: number) {
@@ -58,10 +57,14 @@ export function makeStartPVERequest(
     return makeGameMessage(wallet, "START_PVE", messageId, data);
 }
 
-export function makeClaimRequest(wallet: string, messageId: number) {
+export function makeClaimRequest(
+    wallet: string,
+    messageId: number,
+    type: IClaimType
+) {
     // 9
     const data = new SFSObject();
-    data.putInt("block_reward_type", block_reward_type);
+    data.putInt("block_reward_type", type);
     return makeGameMessage(wallet, "APPROVE_CLAIM", messageId, data);
 }
 

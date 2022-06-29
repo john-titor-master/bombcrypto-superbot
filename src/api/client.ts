@@ -38,6 +38,7 @@ import {
 } from "../parsers/hero";
 import { ILoginParams } from "../parsers/login";
 import {
+    IClaimType,
     ICoinDetailPayload,
     IGetRewardPayload,
     parseRewardType,
@@ -445,13 +446,17 @@ export class Client {
         );
     }
 
-    claim(timeout = 0) {
+    claim(type: IClaimType, timeout = 0) {
         this.ensureLoggedIn();
 
         return makeUniquePromise(
             this.controller.claim,
             () => {
-                const request = makeClaimRequest(this.walletId, this.nextId());
+                const request = makeClaimRequest(
+                    this.walletId,
+                    this.nextId(),
+                    type
+                );
                 this.sfs.send(request);
             },
             timeout || this.timeout

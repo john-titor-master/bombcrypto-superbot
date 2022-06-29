@@ -28,6 +28,10 @@ export type IGetRewardPayload = {
     type: ERewardType;
     value: number;
 };
+export enum IClaimType {
+    BCOIN = 1,
+    SEN = 7,
+}
 
 export type ICoinDetailPayload = {
     mined: number;

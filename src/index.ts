@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import { TreasureMapBot } from "./bot";
 import {
     askAndParseEnv,
@@ -8,13 +8,11 @@ import {
     requireAndParseEnv,
     requireEnv,
 } from "./lib";
-
-export let block_reward_type = 1;
+import { IClaimType } from "./parsers";
 
 async function main() {
     const params = requireAndParseEnv("LOGIN", parseLogin);
     const port = requireEnv("PORT");
-    const app = express();
 
     const bot = new TreasureMapBot(params, {
         telegramKey: askAndParseEnv("TELEGRAM_KEY", identity, ""),
@@ -25,46 +23,46 @@ async function main() {
         modeAdventure: askAndParseEnv("MODE_ADVENTURE", parseBoolean, false),
         houseHeroes: askAndParseEnv("HOUSE_HEROES", identity, ""),
     });
+    if (port) {
+        const app = express();
+        process.once("SIGINT", async () => {
+            await bot.stop();
+            process.exit();
+        });
+        process.once("SIGTERM", async () => {
+            await bot.stop();
+            process.exit();
+        });
 
-    process.once("SIGINT", async () => {
-        await bot.stop();
-        process.exit();
-    });
-    process.once("SIGTERM", async () => {
-        await bot.stop();
-        process.exit();
-    });
+        app.get("/config", async (req: Request, res: Response) => {
+            const data = await bot.getConfig();
+            res.json(data);
+        });
 
-    app.get("/config", async (req, res) => {
-        const data = await bot.getConfig();
-        res.json(data);
-    });
+        app.get("/rewards", async (req: Request, res: Response) => {
+            const data = await bot.getRewards();
+            res.json(data);
+        });
 
-    app.get("/rewards", async (req, res) => {
-        const data = await bot.getRewards();
-        res.json(data);
-    });
+        app.get("/claim/bcoin", async (req: Request, res: Response) => {
+            const data = await bot.claim(IClaimType.BCOIN);
+            res.json(data);
+        });
 
-    app.get("/claim/bcoin", async (req, res) => {
-        block_reward_type = 1;
-        const data = await bot.claim();
-        res.json(data);
-    });
+        app.get("/claim/sen", async (req: Request, res: Response) => {
+            const data = await bot.claim(IClaimType.SEN);
+            res.json(data);
+        });
 
-    app.get("/claim/sen", async (req, res) => {
-        block_reward_type = 7;
-        const data = await bot.claim();
-        res.json(data);
-    });
+        app.get("/stats", async (req: Request, res: Response) => {
+            const data = await bot.getStats();
+            res.json(data);
+        });
 
-    app.get("/stats", async (req, res) => {
-        const data = await bot.getStats();
-        res.json(data);
-    });
-
-    app.listen(port, () => {
-        console.info(`app listening on port ${port}`);
-    });
+        app.listen(port, () => {
+            console.info(`app listening on port ${port}`);
+        });
+    }
 
     await bot.loop();
 }
