@@ -48,14 +48,12 @@ async function main() {
     app.get("/claim/bcoin", async (req, res) => {
         block_reward_type = 1;
         const data = await bot.claim();
-        console.log("🚀 ~ file: index.ts ~ line 42 ~ app.get ~ data", data);
         res.json(data);
     });
 
     app.get("/claim/sen", async (req, res) => {
         block_reward_type = 7;
         const data = await bot.claim();
-        console.log("🚀 ~ file: index.ts ~ line 52 ~ app.get ~ data", data);
         res.json(data);
     });
 

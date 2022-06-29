@@ -28,10 +28,6 @@ export function makeGetHeroUpgradePowerRequest(
 export function makeLoginSignature(privateKey: string, message: string) {
     const web3 = new Web3();
     const result = web3.eth.accounts.sign(message, privateKey);
-    console.log(
-        "🚀 ~ file: requests.ts ~ line 29 ~ makeLoginSignature ~ result",
-        result
-    );
 
     return result.signature;
 }
@@ -65,10 +61,6 @@ export function makeStartPVERequest(
 export function makeClaimRequest(wallet: string, messageId: number) {
     // 9
     const data = new SFSObject();
-    console.log(
-        "🚀 ~ file: requests.ts ~ line 59 ~ makeClaimRequest ~ block_reward_type",
-        block_reward_type
-    );
     data.putInt("block_reward_type", block_reward_type);
     return makeGameMessage(wallet, "APPROVE_CLAIM", messageId, data);
 }

@@ -160,20 +160,6 @@ type IClientController = {
     enterDoor: IUniqueRequestController<IEnterDoorPayload>;
 };
 
-// const userAgent = new UserAgent();
-
-// const API_BASE_HEADERS = {
-//     origin: "https://app.bombcrypto.io",
-//     referer: "https://app.bombcrypto.io",
-//     "sec-ch-ua": ` " Not A;Brand";v="99", "Chromium";v="98", "Google Chrome";v="98"`,
-//     "sec-ch-ua-mobile": "?0",
-//     "sec-ch-ua-platform": `"Windows"`,
-//     "sec-fetch-dest": "empty",
-//     "sec-fetch-mode": "cors",
-//     "sec-fetch-site": "same-site",
-//     "user-agent": userAgent.toString()
-// };
-
 export class Client {
     private handlers!: IClientHandlers;
     private controller!: IClientController;
@@ -278,11 +264,6 @@ export class Client {
 
             message = data.message;
         }
-
-        console.log(
-            "🚀 ~ file: client.ts ~ line 229 ~ Client ~ login ~ message",
-            message
-        );
 
         await this.connect();
         return await makeUniquePromise(
@@ -1029,10 +1010,6 @@ export class Client {
                     value: reward.getFloat("value"),
                 };
             });
-        console.log(
-            "🚀 ~ file: client.ts ~ line 806 ~ Client ~ handleGetReward ~ rewards",
-            rewards
-        );
 
         resolveUniquePromise(this.controller.getReward, rewards);
         this.callHandler(this.handlers.getReward, rewards);
