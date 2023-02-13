@@ -1,0 +1,16 @@
+node_modules/
+teste.txt
+.vscode/
+.env*
+.history
+package-lock.json
+docker-compose-local.yml
+src/ecosystem.config.js
+build/ecosystem.config.js
+database-*
+database.sqlite
+yarn.lock
+src/reverse.ts
+yarn-error.log
+README1.md
+.DS_Store

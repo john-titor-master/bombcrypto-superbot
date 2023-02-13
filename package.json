@@ -1,0 +1,43 @@
+{
+   "name": "bombcrypto-superbot",
+   "version": "1.0.0",
+   "main": "src/index.ts",
+   "license": "MIT",
+   "devDependencies": {
+      "@types/node": "^18.13.0",
+      "@types/user-agents": "^1.0.2",
+      "@types/validator": "^13.7.12",
+      "@types/ws": "^8.2.2",
+      "@typescript-eslint/eslint-plugin": "^5.8.0",
+      "@typescript-eslint/parser": "^5.8.0",
+      "eslint": "^8.5.0",
+      "prettier": "2.5.1",
+      "typescript": "^4.5.4"
+   },
+   "scripts": {
+      "start:bot": "node -r ./build/websocket.js --no-deprecation --unhandled-rejections=strict build/index.js ",
+      "prestart": "git pull",
+      "start": "pm2 delete all || true && yarn install  && npx sequelize-cli db:migrate && pm2 start ./src/ecosystem.config.js",
+      "start:init": "cp ./src/ecosystem.config.local.js ./src/ecosystem.config.js"
+   },
+   "dependencies": {
+      "csv-parser": "^3.0.0",
+      "csv-writer": "^1.6.0",
+      "date-fns": "^2.29.3",
+      "got": "~11.8.3",
+      "node-json-db": "^2.1.3",
+      "pm2": "^5.2.2",
+      "sfs2x-api": "1.7.15",
+      "socket.io-client": "^4.5.4",
+      "telegraf": "^4.11.2",
+      "user-agents": "^1.0.988",
+      "web3": "^1.8.1",
+      "winston": "^3.4.0",
+      "ws": "^8.3.0",
+      "reflect-metadata": "^0.1.13",
+      "sequelize": "^6.28.0",
+      "sequelize-typescript": "^2.1.5",
+      "sqlite3": "^5.1.4",
+      "vinyl-sourcemaps-apply": "^0.2.1"
+   }
+}
