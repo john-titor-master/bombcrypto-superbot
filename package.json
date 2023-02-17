@@ -15,7 +15,7 @@
       "typescript": "^4.5.4"
    },
    "scripts": {
-      "start:bot": "node -r ./build/websocket.js --no-deprecation --unhandled-rejections=strict build/index.js ",
+      "start:bot": "node  --no-deprecation --unhandled-rejections=strict build/index.js ",
       "prestart": "git pull",
       "start": "pm2 delete all || true && yarn install  && npx sequelize-cli db:migrate && pm2 start ./src/ecosystem.config.js",
       "start:init": "cp ./src/ecosystem.config.local.js ./src/ecosystem.config.js"
