@@ -1,2 +1,3 @@
-i morreu.
-1
+```
+wget --no-cache https://raw.githubusercontent.com/lucasvieceli/bombcrypto-superbot/main/install.sh
+```
