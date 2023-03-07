@@ -23,6 +23,18 @@ bash ./install.sh
 ACTION=LOGS ./bot
 ```
 
+para ver de uma conta especifica
+
+```
+ACTION=LOGS IDENTIFY=... ./bot
+```
+
+para ver somente os erros
+
+```
+ACTION=LOGS TYPE=err ./bot
+```
+
 ## Add conta
 
 ```
