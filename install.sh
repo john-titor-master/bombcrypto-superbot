@@ -1,4 +1,5 @@
 #!/bin/bash
+sudo apt update
 apt-get install unzip wget -y
 
 if [ "$(uname -m)" == "arm64" ]; then
