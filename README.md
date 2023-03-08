@@ -4,7 +4,7 @@ execute o seguinte codigo
 
 ```
 sudo apt-get install unzip
-wget --no-cache https://raw.githubusercontent.com/lucasvieceli/bombcrypto-superbot/main/install.sh
+wget --no-cache https://raw.githubusercontent.com/lucasvieceli/bombcrypto-superbot/master/install.sh
 bash ./install.sh
 ```
 
@@ -13,7 +13,7 @@ bash ./install.sh
 execute o seguinte codigo
 
 ```
-wget --no-cache https://raw.githubusercontent.com/lucasvieceli/bombcrypto-superbot/main/install.sh
+wget --no-cache https://raw.githubusercontent.com/lucasvieceli/bombcrypto-superbot/master/install.sh
 bash ./install.sh
 ```
 
