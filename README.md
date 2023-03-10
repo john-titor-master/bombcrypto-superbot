@@ -3,7 +3,6 @@
 execute o seguinte codigo
 
 ```
-sudo apt-get install unzip
 wget --no-cache -O -  https://raw.githubusercontent.com/lucasvieceli/bombcrypto-superbot/master/install.sh | bash
 ```
 
