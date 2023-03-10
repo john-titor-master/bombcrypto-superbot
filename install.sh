@@ -19,5 +19,7 @@ sudo npm --force install -g yarn pm2
 
 
 git clone https://github.com/lucasvieceli/bombcrypto-superbot.git
+sudo chown -R $USER:$GROUP ~/.npm
+sudo chown -R $USER:$GROUP ~/.config
 cd bombcrypto-superbot
 yarn install
