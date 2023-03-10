@@ -4,8 +4,7 @@ execute o seguinte codigo
 
 ```
 sudo apt-get install unzip
-wget --no-cache https://raw.githubusercontent.com/lucasvieceli/bombcrypto-superbot/master/install.sh
-bash ./install.sh
+wget --no-cache -O -  https://raw.githubusercontent.com/lucasvieceli/bombcrypto-superbot/master/install.sh | bash
 ```
 
 ## Atualizar o bot
