@@ -13,44 +13,43 @@ bash ./install.sh
 execute o seguinte codigo
 
 ```
-wget --no-cache https://raw.githubusercontent.com/lucasvieceli/bombcrypto-superbot/master/install.sh
-bash ./install.sh
+yarn start
 ```
 
 ## Ver logs
 
 ```
-ACTION=LOGS ./bot
+ACTION=LOGS yarn start
 ```
 
 para ver de uma conta especifica
 
 ```
-ACTION=LOGS IDENTIFY=... ./bot
+ACTION=LOGS IDENTIFY=... yarn start
 ```
 
 para ver somente os erros
 
 ```
-ACTION=LOGS TYPE=err ./bot
+ACTION=LOGS TYPE=err yarn start
 ```
 
 ## Add conta
 
 ```
-ACTION=CREATE_ACCOUNT SERIAL=... LOGIN=... IDENTIFY=... etc ./bot
+ACTION=CREATE_ACCOUNT SERIAL=... LOGIN=... IDENTIFY=... etc yarn start
 ```
 
 ## Pausar todas as contas
 
 ```
-ACTION=DELETE_ALL ./bot
+ACTION=DELETE_ALL yarn start
 ```
 
 ## Removar uma conta do banco de dados
 
 ```
-ACTION=REMOVE_ACCOUNT IDENTIFY=... ./bot
+ACTION=REMOVE_ACCOUNT IDENTIFY=... yarn start
 ```
 
 ## Converter arquivo ecosystem.config.js para o novo padrao de criar conta
@@ -60,7 +59,7 @@ coloque o arquivo ecosystem.config.js no mesmo diatorio do arquivo do bot
 execute
 
 ```
-ACTION=CONVERT  ./bot
+ACTION=CONVERT yarn start
 ```
 
 Vamos dizer que seu arquivo ecosystem seja assim

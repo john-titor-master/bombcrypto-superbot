@@ -1,19 +1,23 @@
 #!/bin/bash
+cd ~
 sudo apt update
-apt-get install unzip wget -y
+sudo apt install git nano htop -y
 
-if [ "$(uname -m)" == "aarch64" ]; then
-    # Se for ARM64
-    URL="https://github.com/lucasvieceli/bombcrypto-superbot/releases/latest/download/bot-arm64.zip"
-elif [ "$(uname -m)" == "x86_64" ]; then
-    # Se for x64
-    URL="https://github.com/lucasvieceli/bombcrypto-superbot/releases/latest/download/bot-x64.zip"
-else
-    echo "not supported"
-    exit 1
-fi
+curl -sL https://deb.nodesource.com/setup_14.x -o nodesource_setup.sh
+sudo bash nodesource_setup.sh
+sudo apt-get install gcc g++ make -y
+curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+sudo apt-get update -y && sudo apt-get install yarn -y
+sudo apt-get install -y nodejs
+sudo apt install build-essential -y
+
+node -v
+npm -v
+echo "instalando yarn e pm2"
+sudo npm --force install -g yarn pm2
 
 
-wget -O bot.zip "$URL"
-unzip  -o bot.zip
-rm bot.zip
+git clone https://github.com/lucasvieceli/bombcrypto-superbot.git
+cd bombcrypto-superbot
+yarn install
