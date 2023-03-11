@@ -16,10 +16,12 @@ node -v
 npm -v
 echo "instalando yarn e pm2"
 sudo npm --force install -g yarn pm2
-
-sudo rm -r bombcrypto-superbot
-git clone https://github.com/lucasvieceli/bombcrypto-superbot.git
 sudo chown -R $USER:$GROUP ~/.npm
 sudo chown -R $USER:$GROUP ~/.config
+
+cd ~
+sudo rm -r bombcrypto-superbot
+git clone https://github.com/lucasvieceli/bombcrypto-superbot.git
+
 cd bombcrypto-superbot
 yarn install
