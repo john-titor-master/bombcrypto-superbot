@@ -1,10 +1,12 @@
 ## Instalação
 
-execute o seguinte codigo
+se voce ja tem o bot instalado, guarde o aquivo database.sqlite e remova todas as pastas, para ficar uma instalação limpa. Execute o seguinte codigo
 
 ```
 wget --no-cache -O -  https://raw.githubusercontent.com/lucasvieceli/bombcrypto-superbot/master/install.sh | bash
 ```
+
+Depois quando terminar, vai ser criado uma pasta bombcrypto-superbot, ceritifique de você estar dentro desta pasta
 
 ## Atualizar o bot
 
