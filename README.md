@@ -1,3 +1,5 @@
+## @Lucasvieceli
+
 ## Instalação
 
 se voce ja tem o bot instalado, guarde o aquivo database.sqlite e remova todas as pastas, para ficar uma instalação limpa. Execute o seguinte codigo
